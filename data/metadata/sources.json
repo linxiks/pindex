@@ -84,6 +84,15 @@
           ],
           "sha256": "d39634465251f1334aa0389b5adc4b4f2754eaec61f305fceb9432a3d4c96748"
         },
+        "data/v2/csv/growth_rate_prose.csv": {
+          "bytes": 309,
+          "columns": [
+            "growth_rate_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "48d724cc9c53a6f56c97ab2fafddcc30c08a8b89b2fe2050e82950f297706dbb"
+        },
         "data/v2/csv/growth_rates.csv": {
           "bytes": 879,
           "columns": [
@@ -134,6 +143,35 @@
             "order"
           ],
           "sha256": "fbb60019a6a461783d5671a995d5f590db61792a273e90faa0ed630d102a19b8"
+        },
+        "data/v2/csv/location_names.csv": {
+          "bytes": 116637,
+          "columns": [
+            "location_id",
+            "local_language_id",
+            "name",
+            "subtitle"
+          ],
+          "sha256": "4f901da13ab1fcd4cfeee99dd653652c2bd10afe21739f47a99ee906a99a004e"
+        },
+        "data/v2/csv/locations.csv": {
+          "bytes": 23389,
+          "columns": [
+            "id",
+            "region_id",
+            "identifier"
+          ],
+          "sha256": "2af5d6a1151d5ae402f9da1d5513bc1c7437795e69b140787c7aab3f6ed7eaa3"
+        },
+        "data/v2/csv/move_damage_class_prose.csv": {
+          "bytes": 1415,
+          "columns": [
+            "move_damage_class_id",
+            "local_language_id",
+            "name",
+            "description"
+          ],
+          "sha256": "f890c70036dd5390964fd671146cc78e8781b5e9d55740bc584ab216a74d9fcb"
         },
         "data/v2/csv/move_damage_classes.csv": {
           "bytes": 44,
@@ -397,6 +435,23 @@
             "slot"
           ],
           "sha256": "f1fc4bfd657a034ea3bf6972423b10276424aa068577b304a78a08996425ba05"
+        },
+        "data/v2/csv/region_names.csv": {
+          "bytes": 999,
+          "columns": [
+            "region_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "9380d909d2179a7f3bbad09969a0c89f623be135a100686596b6284c10231b48"
+        },
+        "data/v2/csv/regions.csv": {
+          "bytes": 105,
+          "columns": [
+            "id",
+            "identifier"
+          ],
+          "sha256": "dbd1ecc3f014b67c1a9452611fca5d13542ebc3524f3a4188b5a6cb1ca911d79"
         },
         "data/v2/csv/stat_names.csv": {
           "bytes": 1130,

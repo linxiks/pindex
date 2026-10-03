@@ -42,12 +42,15 @@
 | 图鉴说明 | PokeAPI `pokemon_species_flavor_text` | zh-hans 只在 sun～shield 8 个版本；至少一条 722/1025 | 中 | BSD-3-Clause | PokeAPI，回退 zh-Hans → zh-Hant → en |
 | 日文名 | PokeAPI `ja`、`ja-hrkt` | 不适用 | 高 | BSD-3-Clause | PokeAPI |
 | 性格、蛋组 | PokeAPI `natures`、`egg_groups`、`egg_group_prose` | 性格 25/25，蛋组 15/15 | 高 | BSD-3-Clause | PokeAPI |
+| 成长速度、学习方式、进化触发方式名称 | PokeAPI `growth_rates`、`pokemon_move_methods`、`evolution_triggers` 的 identifier | 无（PokeAPI 这三类没有任何 zh-hans 名称） | 高 | BSD-3-Clause | 应用字符串资源按 identifier 映射；未收录的 identifier 显示 PokeAPI 英文名 |
+| 地点、地区名称（进化条件用） | PokeAPI `location_names`、`region_names` | 进化用到的 17 个地点中 4 个有 zh-hans；地区 3/3 | 中 | BSD-3-Clause | PokeAPI，缺失回退 zh-Hans → zh-Hant → en |
 | 图片 | PokeAPI/sprites | 不适用 | 高 | CC0 仓库，图像版权归 The Pokémon Company | PokeAPI/sprites（是否分发由 D4-7 决定，阶段 1～3 不打包图片） |
 
 说明：
 - 中文覆盖与完整度为 D0-4、D0-5、D0-6 在固定 commit 上的实测，详见 `data/reports/coverage.md`、`species-name-diff.md`、`showdown-diff.md`、`learnset-size.md`。
-- 语言 id 由构建器按 `languages.identifier` 查找（当前 zh-hans=12、zh-hant=4、en=9、ja=11、ja-hrkt=1），不硬编码。
-- 全部 42 个 CSV 的表头已记录在 `data/metadata/sources.json` 的 `columns` 字段，导入代码以此为准。与本文早期假设的差异：蛋组名称在 `egg_group_prose`（`egg_group_id,local_language_id,name`），不存在 `egg_group_names`；`pokemon_moves` 多出 `mastery` 列；`pokemon_evolution` 共 34 列，`raw_conditions` 须保存全部非空列（含 `condition_expression`、`version_group_id`、`percentage_chance`）。
+- 语言 id 由构建器按 `languages.identifier` 查找（当前 zh-hans=12、zh-hant=4、en=9、ja=11、ja-hrkt=1），不硬编码。`ja` 与 `ja-hrkt` 是两套独立文本（1025 个物种两者都有），分别入库。
+- `sources.json` 共记录 48 个 PokeAPI CSV，表头在各文件的 `columns` 字段，导入代码以此为准。阶段 0 结束后为第三节补入 6 个：`growth_rate_prose`、`move_damage_class_prose`、`locations`、`location_names`、`regions`、`region_names`。与本文早期假设的差异：蛋组名称在 `egg_group_prose`（`egg_group_id,local_language_id,name`），不存在 `egg_group_names`；`pokemon_moves` 多出 `mastery` 列；`pokemon_evolution` 共 34 列，`raw_conditions` 须保存全部非空列（含 `condition_expression`、`version_group_id`、`percentage_chance`）；`items.csv` 没有世代列。
+- 成长速度、学习方式、进化触发方式是封闭的小枚举（6、12、18 个），PokeAPI 没有中文。它们是界面用语，不是官方说明文本，由应用字符串资源提供中文，不违反"不自动生成官方中文"（`project.md` §15）。
 - Showdown 的 `data/*.ts` 是 TypeScript 对象字面量，`moves.ts`、`abilities.ts`、`items.ts` 含函数，不能直接当 JSON 读。它只用于校验。D0-6 实际做法：`node tools/phase0/showdown_dump.mjs` 用 Node 24 原生类型剥离 `import` `typechart.ts`、`learnsets.ts`、`pokedex.ts`，再 `JSON.stringify` 到 `data/normalized/showdown/`，无需 esbuild 或文本解析器。
 
 **说明文本缺口处理（D0-10）**
@@ -66,7 +69,14 @@
 
 ## 三、数据库设计
 
-分为只读图鉴库 `pokedex.db` 和用户库 `user.db`。所有 id 沿用 PokeAPI 的数字 id。文本语言码统一为 `zh-Hans`、`zh-Hant`、`en`、`ja`，构建时由 PokeAPI 的 `local_language_id` 映射（12→zh-Hans，4→zh-Hant，9→en，11→ja，1→ja-Hrkt 并入 `ja` 的次级项）。
+分为只读图鉴库 `pokedex.db` 和用户库 `user.db`。所有 id 沿用 PokeAPI 的数字 id。文本语言码统一为 `zh-Hans`、`zh-Hant`、`en`、`ja`、`ja-Hrkt`，构建时按 `languages.identifier` 映射（当前 12→zh-Hans，4→zh-Hant，9→en，11→ja，1→ja-Hrkt）。`ja-Hrkt`（假名）单独存储，不并入 `ja`：两者同时存在，合并会使 `localized_name` 主键冲突。
+
+导入范围（D0 实测后确定）：
+- `type` 只导入 id < 10000（18 种常规属性加 `stellar`）；`unknown`、`shadow` 不导入。
+- `move` 只导入 id < 10000（919 个）。18 个暗影招式（id ≥ 10001）没有 PP，也没有任何学习面引用它们。
+- `ability` 只导入 `is_main_series=1`（314 个）。非正作特性（id ≥ 10001）没有中文名，也没有任何宝可梦引用它们。
+- 名称表与说明表按同一范围过滤：被排除实体的 `*_names` / `*_flavor_text` 行不导入（实测 `type_names` 有 20 行属于 `unknown` / `shadow`，其余被排除实体没有说明文本）。
+- 其余实体全量导入；`pokemon_move` 保留全部版本组（D0-7）。
 
 ### `pokedex.db`
 
@@ -76,36 +86,43 @@
 | `generation` | `id`, `identifier` | PK `id` |
 | `version_group` | `id`, `generation_id`, `identifier`, `sort_order` | PK `id`；FK `generation_id` |
 | `version` | `id`, `version_group_id`, `identifier` | PK `id`；FK `version_group_id` |
-| `type` | `id`, `identifier` | PK `id` |
+| `type` | `id`, `identifier`, `generation_id` | PK `id` |
 | `type_efficacy` | `attack_type_id`, `defend_type_id`, `factor`（0/50/100/200） | PK (`attack_type_id`, `defend_type_id`)；两列均 FK `type` |
-| `pokemon_species` | `id`（= 全国图鉴编号）, `identifier`, `generation_id`, `evolution_chain_id`, `evolves_from_species_id`, `gender_rate`, `capture_rate`, `base_happiness`, `hatch_counter`, `growth_rate_id`, `is_baby`, `is_legendary`, `is_mythical`, `sort_order` | PK `id`；FK `generation_id`、`evolution_chain_id`、`evolves_from_species_id`；INDEX `generation_id` |
-| `pokemon` | `id`（形态宝可梦为 10001+）, `species_id`, `identifier`, `height`, `weight`, `base_experience`, `is_default`, `sort_order` | PK `id`；FK `species_id`；INDEX `species_id` |
+| `pokemon_species` | `id`（= 全国图鉴编号，D0 已核对与 `pokemon_dex_numbers` 全国图鉴一致）, `identifier`, `generation_id`, `evolution_chain_id`, `evolves_from_species_id`, `gender_rate`（-1 = 无性别）, `capture_rate`, `base_happiness`, `hatch_counter`, `growth_rate_id`, `is_baby`, `is_legendary`, `is_mythical`, `sort_order` | PK `id`；FK `generation_id`、`evolution_chain_id`、`evolves_from_species_id`、`growth_rate_id`；INDEX `generation_id` |
+| `growth_rate` | `id`, `identifier` | PK `id` |
+| `pokemon` | `id`（形态宝可梦为 10001+）, `species_id`, `identifier`, `height`, `weight`, `base_experience`, `is_default`, `sort_order` | PK `id`；FK `species_id`；INDEX `species_id`。`base_experience`（49 行）和 `sort_order`（139 行，id ≥ 899 的新条目）可为 NULL，列表排序用 (`species_id`, `id`) |
 | `pokemon_form` | `id`, `pokemon_id`, `form_identifier`, `is_default`, `is_battle_only`, `is_mega`, `introduced_in_version_group_id`, `sort_order` | PK `id`；FK `pokemon_id`；INDEX `pokemon_id` |
 | `pokemon_type` | `pokemon_id`, `slot`, `type_id` | PK (`pokemon_id`, `slot`)；FK 两列；INDEX `type_id` |
 | `stat` | `id`, `identifier` | PK `id` |
 | `pokemon_stat` | `pokemon_id`, `stat_id`, `base_value` | PK (`pokemon_id`, `stat_id`)；FK 两列 |
-| `ability` | `id`, `identifier`, `generation_id` | PK `id` |
+| `ability` | `id`, `identifier`, `generation_id` | PK `id`；FK `generation_id` |
 | `pokemon_ability` | `pokemon_id`, `slot`, `ability_id`, `is_hidden` | PK (`pokemon_id`, `slot`)；FK 两列；INDEX `ability_id` |
-| `move` | `id`, `identifier`, `type_id`, `damage_class`, `power`, `accuracy`, `pp`, `priority`, `generation_id` | PK `id`；FK `type_id`；`power`、`accuracy` 可为 NULL |
+| `move` | `id`, `identifier`, `type_id`, `damage_class_id`, `power`, `accuracy`, `pp`, `priority`, `generation_id` | PK `id`；FK `type_id`、`damage_class_id`、`generation_id`；`power`、`accuracy` 可为 NULL |
+| `move_damage_class` | `id`, `identifier` | PK `id`。中文名来自 `move_damage_class_prose`（3/3） |
 | `move_method` | `id`, `identifier` | PK `id` |
-| `pokemon_move` | `pokemon_id`, `version_group_id`, `move_id`, `method_id`, `level`, `sort_order` | PK (`pokemon_id`, `version_group_id`, `move_id`, `method_id`, `level`)；FK 四列；INDEX (`move_id`, `version_group_id`) |
-| `evolution_chain` | `id` | PK `id` |
-| `evolution` | `id`, `evolved_species_id`, `trigger`, `min_level`, `item_id`, `held_item_id`, `known_move_id`, `gender`, `time_of_day`, `min_happiness`, `location_id`, `raw_conditions` | PK `id`；FK `evolved_species_id`；INDEX `evolved_species_id`。`raw_conditions` 保存 PokeAPI 原始行的全部非空列（JSON），对应 `project.md` §9 保留结构化原始条件 |
-| `item` | `id`, `identifier`, `category_identifier`, `generation_id` | PK `id` |
+| `pokemon_move` | `pokemon_id`, `version_group_id`, `move_id`, `method_id`, `level`, `sort_order`, `mastery` | PK (`pokemon_id`, `version_group_id`, `move_id`, `method_id`, `level`)，`WITHOUT ROWID`；FK 四列；INDEX (`move_id`, `version_group_id`)。`level` 空值存 0；`sort_order`、`mastery`（传说 阿尔宙斯的精通等级，1882 行）可为 NULL |
+| `evolution_chain` | `id`, `baby_trigger_item_id` | PK `id`；FK `baby_trigger_item_id` |
+| `evolution_trigger` | `id`, `identifier` | PK `id` |
+| `evolution` | `id`, `evolved_species_id`, `evolved_pokemon_form_id`, `version_group_id`, `is_default`, `trigger_id`, `min_level`, `trigger_item_id`, `held_item_id`, `known_move_id`, `known_move_type_id`, `gender_id`, `time_of_day`, `min_happiness`, `min_affection`, `min_beauty`, `location_id`, `region_id`, `trade_species_id`, `raw_conditions` | PK `id`；FK `evolved_species_id`、`evolved_pokemon_form_id`、`version_group_id`、`trigger_id`、各道具 / 招式 / 属性 / 地点 / 地区列；INDEX `evolved_species_id`。`raw_conditions` 保存 PokeAPI 原始行的全部非空列（JSON），覆盖未结构化的条件（如 `condition_expression`、`percentage_chance`、`party_species_id`、`needs_overworld_rain`），对应 `project.md` §9。同一物种可有多行：不同版本组的条件不同，形态进化各占一行（如 alcremie 63 行）；`is_default=0` 的 35 行是替代条件 |
+| `location` | `id`, `region_id`, `identifier` | PK `id`；FK `region_id`（可为 NULL，实测 91 行无地区）。只用于进化条件显示 |
+| `region` | `id`, `identifier` | PK `id` |
+| `item` | `id`, `identifier`, `category_identifier` | PK `id`。`category_identifier` 由 `items.category_id` 关联 `item_categories` 得到；`items.csv` 没有世代列，不提供道具世代 |
 | `nature` | `id`, `identifier`, `increased_stat_id`, `decreased_stat_id` | PK `id`；FK 两个 stat 列 |
 | `egg_group` | `id`, `identifier` | PK `id` |
 | `species_egg_group` | `species_id`, `egg_group_id` | PK 两列；FK 两列 |
-| `localized_name` | `entity`, `entity_id`, `lang`, `name`, `genus`, `source` | PK (`entity`, `entity_id`, `lang`)。`entity` 取值：species / pokemon_form / move / ability / item / type / nature / egg_group / stat / version / generation。`genus` 仅 species 使用 |
+| `localized_name` | `entity`, `entity_id`, `lang`, `name`, `genus`, `source` | PK (`entity`, `entity_id`, `lang`)，`WITHOUT ROWID`。`entity` 取值：species / pokemon_form / move / ability / item / type / nature / egg_group / stat / version / generation / growth_rate / move_damage_class / location / region。`lang` 取上面五个语言码。`genus` 仅 species 使用。pokemon_form 取 `pokemon_form_names.form_name`；其 `pokemon_name` 列没有任何中文，不导入，形态完整名称由应用按"物种名 + 形态名"组合 |
 | `species_flavor_text` | `species_id`, `version_id`, `lang`, `text`, `source` | PK (`species_id`, `version_id`, `lang`)；FK 前两列 |
 | `move_flavor_text` | `move_id`, `version_group_id`, `lang`, `text`, `source` | PK 前三列加 `lang`；FK 前两列 |
 | `ability_flavor_text` | `ability_id`, `version_group_id`, `lang`, `text`, `source` | PK 前三列加 `lang`；FK 前两列 |
-| `search_index` | `entity`, `entity_id`, `term`, `display`, `priority` | INDEX `term`。`term` 已规范化（小写、去空格、全角转半角）；`priority`：0=中文名，1=英文名，2=日文名，3=别名 |
+| `search_index` | `term`, `entity`, `entity_id`, `display`, `priority` | PK (`term`, `entity`, `entity_id`)，`WITHOUT ROWID`，前缀查询直接走主键。`entity` 取值：species / move / ability / item。`term` 已规范化（小写、去空格、全角转半角），同一实体的相同 `term` 只存一行（354 个物种简繁名相同）。`display` 为按回退规则解析后的中文显示名。`priority`：0=中文名（zh-Hans / zh-Hant），1=英文名，2=日文名（ja / ja-Hrkt）；别名没有许可明确的来源，阶段 1 不生成 |
 
 约束：
-- 任何表都不得用全国图鉴编号单独作为形态主键。形态走 `pokemon` 和 `pokemon_form` 两层。
-- `localized_name`、各 flavor_text 表的 `source` 列记录文本来自哪个数据源，回退得到的文本另记回退语言，便于 UI 和审计识别。
-- 不存储属性克制结果，运行时计算。
+- 任何表都不得用全国图鉴编号单独作为形态主键。形态走 `pokemon` 和 `pokemon_form` 两层。每个 pokemon 至少一个 form（实测无例外）；8 个 pokemon（koraidon / miraidon 的各形态）没有 `is_default=1` 的 form，应用取 `sort_order` 最小者。
+- 库内只存真实文本：`lang` 就是文本的原语言，不写入回退副本。回退在读取时按 zh-Hans → zh-Hant → en 进行，结果带原语言标注；构建器只在生成 `search_index.display` 和报告时用同一规则。`source` 列记录数据源（阶段 1 均为 `pokeapi`）。
+- flavor_text 原样存储（含 `\n`、`\f`、软连字符 `U+00AD`）。换行是游戏内排版，显示时由应用规范化：去掉"软连字符 + 换行"；中文去掉换行；日文换行改为全角空格；英文换行和 `\f` 改为空格。
+- 不存储属性克制结果，运行时计算。克制计算只用 `type_efficacy` 中出现的 18 种属性；`stellar` 没有克制数据，宝可梦属性也只引用这 18 种。
 - 所有外键在构建后由完整性检查验证，不依赖运行时开启外键约束。
+- 数据源本身的缺口在构建报告中以警告列出，不算构建失败：9 个新超级进化形态（`zygarde-mega`、`heatran-mega` 等）没有特性；48 个超极巨化形态没有学习面（与默认形态共用）；3 个正作特性（312～314）没有中文名。
 
 ### 全文搜索方案
 
@@ -220,25 +237,25 @@ erDiagram
 |---|---|---|---|---|---|
 | D1-1 | 项目骨架与 `sources.json` 读取 | D0-3 | `tools/data-builder/build.py`、模块目录、测试目录 | `python tools/data-builder/build.py --help` 可运行 | D0-3 |
 | D1-2 | 写 `schema.sql` | 本文第三节 | `tools/data-builder/schema.sql` | 可被 `sqlite3` 无错执行；表、主键、外键、索引与第三节一致 | D0-10 |
-| D1-3 | 导入 generation / version_group / version / type / stat / move_method | 对应 CSV | 对应表 | 行数与源 CSV 一致 | D1-1, D1-2 |
+| D1-3 | 导入 generation / version_group / version / type / stat / move_method / move_damage_class / growth_rate / evolution_trigger / region / location | 对应 CSV | 对应表 | 行数与源 CSV 一致（type 按第三节导入范围） | D1-1, D1-2 |
 | D1-4 | 导入 `type_efficacy` | `type_efficacy.csv` | 表，factor 为 0/50/100/200 | 行数与源一致；无其他取值 | D1-3 |
 | D1-5 | 导入 `pokemon_species` | `pokemon_species.csv` | 表 | 1025 行，id 从 1 连续 | D1-3 |
-| D1-6 | 导入 `pokemon`、`pokemon_form` | `pokemon.csv`、`pokemon_forms.csv` | 两张表 | 每个 pokemon 都有 species；无孤立 form | D1-5 |
+| D1-6 | 导入 `pokemon`、`pokemon_form` | `pokemon.csv`、`pokemon_forms.csv` | 两张表 | 每个 pokemon 都有 species 和至少一个 form；无孤立 form；无默认 form 的 pokemon 恰为第三节列出的 8 个 | D1-5 |
 | D1-7 | 导入 `pokemon_type`、`pokemon_stat` | 对应 CSV | 两张表 | 每个 pokemon 有 1～2 个属性、6 项种族值 | D1-6 |
-| D1-8 | 导入 `ability`、`pokemon_ability` | 对应 CSV | 两张表 | 每个 pokemon 至少一个特性；隐藏特性标记正确 | D1-6 |
-| D1-9 | 导入 `move` | `moves.csv` | 表 | 每个招式有属性、分类、PP（变化招式允许无威力） | D1-3 |
-| D1-10 | 导入 `pokemon_move` | `pokemon_moves.csv`，D0-7 的结论 | 表 | 行数与选定方案一致；无无效外键 | D1-6, D1-9 |
-| D1-11 | 导入 `evolution_chain`、`evolution` | `pokemon_evolution.csv` | 两张表；`raw_conditions` 保存全部非空条件列 | 行数与源一致；无丢失条件 | D1-5 |
-| D1-12 | 导入 `item`、`nature`、`egg_group`、`species_egg_group` | 对应 CSV | 四张表 | 性格 25 行 | D1-5 |
-| D1-13 | 导入 `localized_name` | 各 `*_names.csv` | 表，含 `source` | species zh-Hans 1025 行 | D1-5, D1-9, D1-12 |
-| D1-14 | 导入三张 flavor_text 表 | 各 `*_flavor_text.csv` | 三张表，含 `source` | 文本未被修改；无自动生成内容 | D1-13 |
-| D1-15 | 语言回退 | D1-13、D1-14 | 回退规则实现：zh-Hans → zh-Hant → en；回退项标注原语言 | 单元测试覆盖三种回退路径 | D1-13, D1-14 |
+| D1-8 | 导入 `ability`、`pokemon_ability` | 对应 CSV | 两张表 | 只含 `is_main_series=1`；除第三节列出的 9 个形态外，每个 pokemon 至少一个特性；隐藏特性均在 slot 3 | D1-6 |
+| D1-9 | 导入 `move` | `moves.csv` | 表 | 919 行（id < 10000）；每个招式有属性、分类、PP（变化招式允许无威力） | D1-3 |
+| D1-10 | 导入 `pokemon_move` | `pokemon_moves.csv`，D0-7 的结论 | 表，含 `mastery` | 638321 行（全部版本组）；无无效外键 | D1-6, D1-9 |
+| D1-11 | 导入 `evolution_chain`、`evolution` | `evolution_chains.csv`、`pokemon_evolution.csv` | 两张表；`raw_conditions` 保存全部非空条件列 | 676 行；每行 `raw_conditions` 的键集合等于源行非空列集合 | D1-3, D1-5 |
+| D1-12 | 导入 `item`、`nature`、`egg_group`、`species_egg_group` | 对应 CSV，`item_categories.csv` | 四张表 | 性格 25 行；道具 2223 行且都有 `category_identifier` | D1-5 |
+| D1-13 | 导入 `localized_name` | 各 `*_names.csv`、`egg_group_prose`、`growth_rate_prose`、`move_damage_class_prose` | 表，含 `source`；五个语言码 | species zh-Hans 1025 行，ja 与 ja-Hrkt 各 1025 行 | D1-5, D1-9, D1-12 |
+| D1-14 | 导入三张 flavor_text 表 | 各 `*_flavor_text.csv` | 三张表，含 `source` | 文本与源逐字节一致（不做换行规范化）；无自动生成内容 | D1-13 |
+| D1-15 | 语言回退 | D1-13、D1-14 | 构建器内的纯函数：zh-Hans → zh-Hant → en，返回文本与原语言；用于 `search_index.display` 和报告，不写入回退副本 | 单元测试覆盖三种回退路径和全部缺失 | D1-13, D1-14 |
 | D1-16 | 冲突日志 | D0-5、D0-6 的规则 | `data/generated/conflicts.csv` | 发生冲突时写日志，不静默覆盖 | D1-13 |
-| D1-17 | 生成 `search_index` | 名称表 | 表及 `term` 索引 | 中文名、英文名、日文名、编号均有记录 | D1-13 |
+| D1-17 | 生成 `search_index` | 名称表 | 表 | 物种、招式、特性、道具的中文名、英文名、日文名均有记录；无重复 (`term`, `entity`, `entity_id`) | D1-13, D1-15 |
 | D1-18 | 写入 `meta` | `sources.json` | `meta` 四项 | 四个键齐全，`source_versions` 为合法 JSON | D1-1 |
 | D1-19 | 完整性检查：宝可梦 | 构建后的库 | `verify.py` 相关检查 | 覆盖 `project.md` §37：编号连续、无重复 id、缺中文名、缺属性、缺种族值、孤立形态 | D1-7, D1-13 |
 | D1-20 | 完整性检查：招式与特性 | 同上 | 相关检查 | 招式检查 id、名称、属性、分类、PP；特性检查 id、名称、与宝可梦的关系 | D1-9, D1-8 |
-| D1-21 | 完整性检查：外键 | 同上 | 相关检查 | pokemon→species / type / ability / move、evolution→species 均无无效引用 | D1-10, D1-11 |
+| D1-21 | 完整性检查：外键 | 同上 | 相关检查 | 第三节列出的全部 FK 无无效引用（含 pokemon→species / type / ability / move、evolution→species / form / item / move / type / location / region、localized_name 与 flavor_text→对应实体）；可空 FK 只检查非 NULL 值 | D1-10, D1-11, D1-13, D1-14 |
 | D1-22 | 构建器单元测试 | 小型 CSV 夹具 | `tools/data-builder/tests/` | 测试覆盖回退、形态、学习面主键；在干净环境可运行 | D1-15 |
 | D1-23 | 生成 `pokedex.db` 并验证可重复 | 全部输入 | `data/generated/pokedex.db` | 连续两次构建的 sha256 一致；§37 全部检查通过；记录库体积 | D1-17 ～ D1-22 |
 
