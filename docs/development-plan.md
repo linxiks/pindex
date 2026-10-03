@@ -8,6 +8,7 @@
 - 仓库 `linxiks/pindex`，分支 master。
 - 文档：`docs/project.md`（开发需求）、`docs/design.md`（UI/UX 设计）、本文、`README.md`、`LICENSE`、`NOTICE`、`DATA_SOURCES.md`。
 - 阶段 0 产物：`tools/data-builder/fetch.py`（获取脚本）、`tools/phase0/`（覆盖率与对比脚本）、`data/metadata/sources.json`、`data/reports/*.md`。`data/raw/`、`data/normalized/` 不入库（`.gitignore`）。
+- 阶段 1 产物：`tools/data-builder/build.py`（构建器）、`verify.py`（独立完整性检查）、`schema.sql`、`builder/`、`tests/`。输出 `data/generated/`（`pokedex.db`、`conflicts.csv`、`build-report.md`）不入库，由 `fetch.py` + `build.py` 重现。
 - 尚无 Gradle 工程和应用代码。
 
 **开发环境**
@@ -110,11 +111,17 @@
 | `nature` | `id`, `identifier`, `increased_stat_id`, `decreased_stat_id` | PK `id`；FK 两个 stat 列 |
 | `egg_group` | `id`, `identifier` | PK `id` |
 | `species_egg_group` | `species_id`, `egg_group_id` | PK 两列；FK 两列 |
-| `localized_name` | `entity`, `entity_id`, `lang`, `name`, `genus`, `source` | PK (`entity`, `entity_id`, `lang`)，`WITHOUT ROWID`。`entity` 取值：species / pokemon_form / move / ability / item / type / nature / egg_group / stat / version / generation / growth_rate / move_damage_class / location / region。`lang` 取上面五个语言码。`genus` 仅 species 使用。pokemon_form 取 `pokemon_form_names.form_name`；其 `pokemon_name` 列没有任何中文，不导入，形态完整名称由应用按"物种名 + 形态名"组合 |
+| `localized_name` | `entity`, `entity_id`, `lang`, `name`, `genus`, `source` | PK (`entity`, `entity_id`, `lang`)，`WITHOUT ROWID`。`entity` 取值：species / pokemon_form / move / ability / item / type / nature / egg_group / stat / version / generation / growth_rate / move_damage_class / location / region。`lang` 取上面五个语言码。`genus` 仅 species 使用，空值存 NULL。name 为空字符串的源行跳过（实测 18 行形态名）。pokemon_form 取 `pokemon_form_names.form_name`；其 `pokemon_name` 列没有任何中文，不导入，形态完整名称由应用按"物种名 + 形态名"组合 |
 | `species_flavor_text` | `species_id`, `version_id`, `lang`, `text`, `source` | PK (`species_id`, `version_id`, `lang`)；FK 前两列 |
 | `move_flavor_text` | `move_id`, `version_group_id`, `lang`, `text`, `source` | PK 前三列加 `lang`；FK 前两列 |
 | `ability_flavor_text` | `ability_id`, `version_group_id`, `lang`, `text`, `source` | PK 前三列加 `lang`；FK 前两列 |
-| `search_index` | `term`, `entity`, `entity_id`, `display`, `priority` | PK (`term`, `entity`, `entity_id`)，`WITHOUT ROWID`，前缀查询直接走主键。`entity` 取值：species / move / ability / item。`term` 已规范化（小写、去空格、全角转半角），同一实体的相同 `term` 只存一行（354 个物种简繁名相同）。`display` 为按回退规则解析后的中文显示名。`priority`：0=中文名（zh-Hans / zh-Hant），1=英文名，2=日文名（ja / ja-Hrkt）；别名没有许可明确的来源，阶段 1 不生成 |
+| `search_index` | `term`, `entity`, `entity_id`, `display`, `priority` | PK (`term`, `entity`, `entity_id`)，`WITHOUT ROWID`，前缀查询直接走主键。`entity` 取值：species / move / ability / item。`term` 按"全文搜索方案"的规则规范化，同一实体的相同 `term` 只存一行（354 个物种简繁名相同）。`display` 为按回退规则解析后的中文显示名；没有 zh-Hans / zh-Hant / en 名称的实体不生成行。`priority`：0=中文名（zh-Hans / zh-Hant），1=英文名，2=日文名（ja / ja-Hrkt）；别名没有许可明确的来源，阶段 1 不生成 |
+
+表结构定义在 `tools/data-builder/schema.sql`：
+- 列类型只用 `INTEGER` 和 `TEXT`（布尔为 INTEGER 0/1），与 Room 的 schema 校验直接对应。
+- 除以下可空列外全部 `NOT NULL`：`pokemon_species.evolves_from_species_id`、`pokemon.base_experience`、`pokemon.sort_order`、`pokemon_form.form_identifier`、`move.power`、`move.accuracy`、`pokemon_move.sort_order`、`pokemon_move.mastery`、`evolution_chain.baby_trigger_item_id`、`location.region_id`、`localized_name.genus`，以及 `evolution` 中除 `id`、`evolved_species_id`、`version_group_id`、`is_default`、`trigger_id`、`raw_conditions` 外的全部列。源 CSV 空字符串一律存 NULL（`pokemon_move.level` 例外，存 0）。
+- 外键写成列级 `REFERENCES`；`localized_name`、`search_index` 是多态引用，不写外键，由完整性检查覆盖。
+- 索引名按 Room 约定 `index_<表>_<列>`，如 `index_pokemon_move_move_id_version_group_id`。
 
 约束：
 - 任何表都不得用全国图鉴编号单独作为形态主键。形态走 `pokemon` 和 `pokemon_form` 两层。每个 pokemon 至少一个 form（实测无例外）；8 个 pokemon（koraidon / miraidon 的各形态）没有 `is_default=1` 的 form，应用取 `sort_order` 最小者。
@@ -122,19 +129,19 @@
 - flavor_text 原样存储（含 `\n`、`\f`、软连字符 `U+00AD`）。换行是游戏内排版，显示时由应用规范化：去掉"软连字符 + 换行"；中文去掉换行；日文换行改为全角空格；英文换行和 `\f` 改为空格。
 - 不存储属性克制结果，运行时计算。克制计算只用 `type_efficacy` 中出现的 18 种属性；`stellar` 没有克制数据，宝可梦属性也只引用这 18 种。
 - 所有外键在构建后由完整性检查验证，不依赖运行时开启外键约束。
-- 数据源本身的缺口在构建报告中以警告列出，不算构建失败：9 个新超级进化形态（`zygarde-mega`、`heatran-mega` 等）没有特性；48 个超极巨化形态没有学习面（与默认形态共用）；3 个正作特性（312～314）没有中文名。
+- 数据源本身的缺口在构建报告中以警告列出，不算构建失败：9 个新超级进化形态（`zygarde-mega`、`heatran-mega` 等）没有特性；48 个超极巨化形态没有学习面（与默认形态共用）；3 个正作特性（312～314）没有中文名；正作特性 303 `embody-aspect` 未被任何宝可梦引用；道具 2278 `hopo-berry`、2279 `roseli-berry` 在任何语言都没有名称，不进 `search_index`；15 个物种（1011～1025）没有 zh-Hans genus。
 
 ### 全文搜索方案
 
-- 用户输入先规范化（去首尾空白、去 `#`、全角转半角、小写）。
+- 用户输入与 `search_index.term` 使用同一规范化规则：NFKC（全角转半角）、小写、删除全部空白与 `#`。构建器实现见 `tools/data-builder/builder/search.py` 的 `normalize_term`，应用端用 Kotlin `Normalizer.normalize(s, Normalizer.Form.NFKC).lowercase()` 后删除空白与 `#`。
 - 若匹配 `^0*(\d{1,4})$`，直接按 `pokemon_species.id` 精确查询，覆盖 `25`、`025`、`#025`。
 - 否则先前缀匹配 `term LIKE q || '%'`，可用索引；再包含匹配 `term LIKE '%' || q || '%'`。合并去重，按（前缀命中优先, `priority`, `entity_id`）排序。
-- 规模 [INFERENCE]：约 6k 个实体，每个约 4 个检索词，合计约 2.5 万行，LIKE 扫描足够快。
+- 规模：D1-23 实测 `search_index` 15843 行，LIKE 扫描足够快。
 - 验收：设备上单次查询 < 50 ms（D5-1 实测）。超出时改用 Room `@Fts4`。SQLite 默认分词器不切分中文，FTS 对"皮卡"→"皮卡丘"这类前缀有效，对中缀匹配无效，因此不作为首选。
 
 ### 数据版本方案
 
-- `meta` 表记录 `schema_version`（与 Room 数据库版本对应）、`data_version`（`sources.json` 中人工递增的整数）、`build_date`（ISO 8601 UTC）、`source_versions`（各来源的固定 commit）。
+- `meta` 表记录 `schema_version`（与 Room 数据库版本对应，同时写入 `PRAGMA user_version`，供 Room 判断版本）、`data_version`（`sources.json` 中人工递增的整数）、`build_date`（`sources.json` 各来源 `retrieved` 的最大值，ISO 8601 日期；不取构建时刻，保证可重复）、`source_versions`（各来源的固定 commit，JSON）。
 - `data/metadata/sources.json` 是版本的唯一录入点，构建器从中读取并写入 `meta`。
 - Room 使用 `createFromAsset("pokedex.db")`。图鉴库只读，`schema_version` 变化时整库替换；用户数据在独立的 `user.db` 中，不受影响。
 
@@ -250,7 +257,7 @@ erDiagram
 | D1-13 | 导入 `localized_name` | 各 `*_names.csv`、`egg_group_prose`、`growth_rate_prose`、`move_damage_class_prose` | 表，含 `source`；五个语言码 | species zh-Hans 1025 行，ja 与 ja-Hrkt 各 1025 行 | D1-5, D1-9, D1-12 |
 | D1-14 | 导入三张 flavor_text 表 | 各 `*_flavor_text.csv` | 三张表，含 `source` | 文本与源逐字节一致（不做换行规范化）；无自动生成内容 | D1-13 |
 | D1-15 | 语言回退 | D1-13、D1-14 | 构建器内的纯函数：zh-Hans → zh-Hant → en，返回文本与原语言；用于 `search_index.display` 和报告，不写入回退副本 | 单元测试覆盖三种回退路径和全部缺失 | D1-13, D1-14 |
-| D1-16 | 冲突日志 | D0-5、D0-6 的规则 | `data/generated/conflicts.csv` | 发生冲突时写日志，不静默覆盖 | D1-13 |
+| D1-16 | 冲突日志 | sindresorhus `zh-hans.json` / `zh-hant.json` | `data/generated/conflicts.csv` | 列出全部物种简繁名差异（当前 171 行），PokeAPI 为采用值；冲突不静默覆盖。Showdown 对比仍由 `tools/phase0/showdown_diff.py` 单独生成报告，不在构建中执行 | D1-13 |
 | D1-17 | 生成 `search_index` | 名称表 | 表 | 物种、招式、特性、道具的中文名、英文名、日文名均有记录；无重复 (`term`, `entity`, `entity_id`) | D1-13, D1-15 |
 | D1-18 | 写入 `meta` | `sources.json` | `meta` 四项 | 四个键齐全，`source_versions` 为合法 JSON | D1-1 |
 | D1-19 | 完整性检查：宝可梦 | 构建后的库 | `verify.py` 相关检查 | 覆盖 `project.md` §37：编号连续、无重复 id、缺中文名、缺属性、缺种族值、孤立形态 | D1-7, D1-13 |
@@ -365,8 +372,8 @@ erDiagram
 - 对策：大图（official-artwork、HOME）不可能随 APK 打包；96px 图体积可接受但仍受版权约束。D4-7 据此决策，决策前不打包任何图片（`project.md` §30）。
 
 **SQLite 大小**
-- 现象：D0-7 实测 `pokemon_move` 全部版本组带索引约 18.3 MB，是库体积的主体 [INFERENCE：其余表合计预计数 MB]。
-- 对策：D1-23 实测并记录整库体积；若 APK 体积不可接受，再改为仅最新版本组（2.2 MB）。
+- 现象：D1-23 实测整库 32.7 MB（32657408 字节）。`pokemon_move` 10.6 MB，其索引 `(move_id, version_group_id)` 9.3 MB，三张说明表合计 8.7 MB，其余表合计约 4 MB。
+- 对策：若 APK 体积不可接受，先去掉 `index_pokemon_move_move_id_version_group_id`（"招式→可学宝可梦"查询改为扫描），再考虑改为仅最新版本组（D0-7 实测 2.2 MB）。
 
 **许可证**
 - 现象：42arch 数据来自 52poke（CC BY-NC-SA 3.0，D0-9 判定不可用），wenitrys 无许可证，图像版权归 The Pokémon Company，play.pokemonshowdown.com 的 JSON 归属不明。
@@ -389,7 +396,7 @@ erDiagram
 | 阶段 | 可执行标准 |
 |---|---|
 | 阶段 0 | 覆盖率报告和两份对比报告已产出；`DATA_SOURCES.md` 中所有"待固定"项已填写；第二节字段表中每个字段都有唯一最终来源 |
-| 阶段 1 | 在干净克隆上执行 `python tools/data-builder/build.py` 生成 `pokedex.db`；`verify` 中 `project.md` §37 的检查全部通过；连续两次构建的 sha256 一致 |
+| 阶段 1 | 在干净克隆上执行 `python3 tools/data-builder/fetch.py` 与 `python3 tools/data-builder/build.py` 生成 `pokedex.db`；`verify.py` 中 `project.md` §37 的检查全部通过；在同一 SQLite 版本下连续两次构建的 sha256 一致（文件头记录 SQLite 版本号，跨版本不保证字节一致） |
 | 阶段 2 | 飞行模式下，冷启动、列表浏览、搜索（`皮卡丘`、`皮卡`、`Pikachu`、`25`、`025`、`#025` 六个用例）、详情页均可使用；`design.md` §61 的 15 项检查全部通过 |
 | 阶段 3 | 属性测试（单属性、双属性、免疫）与进化测试（等级、石头、交换、多分支、特殊条件）通过；`design.md` §55 路径 E 可连续跳转并逐级返回 |
 | 阶段 4 | 替换 `pokedex.db` 后收藏、最近查看、搜索历史、设置保留；图片策略有书面决策并已实施 |

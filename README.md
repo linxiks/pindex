@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-阶段 0：数据可行性验证。尚无可运行代码。
+阶段 1：数据构建器已完成，可生成离线图鉴库 `pokedex.db`。尚无安卓应用代码。
 
 ## 文档
 
@@ -14,18 +14,31 @@
 - [数据来源](DATA_SOURCES.md)
 - [第三方署名与商标声明](NOTICE)
 
-## 规划中的目录结构
+## 目录结构
 
 ```text
 app/                    安卓应用（规划中）
-tools/data-builder/     Python 数据构建器（规划中）
+tools/data-builder/     Python 数据构建器（仅标准库）
+tools/phase0/           阶段 0 覆盖率与对比脚本
 data/
-  raw/                  原始数据（规划中）
-  normalized/           标准化数据（规划中）
-  generated/            生成的 pokedex.db（规划中）
-  metadata/             sources.json（规划中）
+  raw/                  原始数据（不入库，由 fetch.py 下载）
+  normalized/           阶段 0 Showdown 转储（不入库）
+  generated/            生成的 pokedex.db、conflicts.csv、build-report.md（不入库）
+  metadata/             sources.json（固定 commit 与 sha256）
+  reports/              阶段 0 报告
 docs/                   需求、设计与开发计划
 ```
+
+## 构建
+
+在仓库根目录运行：
+
+```sh
+python3 tools/data-builder/fetch.py   # 下载固定版本的原始数据
+python3 tools/data-builder/build.py   # 生成 data/generated/pokedex.db
+```
+
+单元测试：`python3 -m unittest discover -s tools/data-builder/tests -v`。
 
 ## 许可证
 

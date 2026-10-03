@@ -35,14 +35,14 @@
 
 ## 修改方式
 
-构建流程为 raw → normalized → SQLite，由 `tools/data-builder/` 中的 Python 脚本完成。获取一步已实现，标准化与合并仍在规划中（阶段 1）。
+构建流程为 raw → SQLite，由 `tools/data-builder/` 中的 Python 脚本完成（仅用标准库），已实现（阶段 1）：`python3 tools/data-builder/fetch.py` 获取，`python3 tools/data-builder/build.py` 构建，`python3 tools/data-builder/verify.py` 独立复核。
 
 1. 获取：`python3 tools/data-builder/fetch.py`（仓库根目录运行）按 `data/metadata/sources.json` 中的 repo、commit 和文件列表，从 `raw.githubusercontent.com` 下载到 `data/raw/<来源>/`，并记录 sha256、字节数和 CSV 表头。已记录 sha256 的文件会被校验，不一致时以退出码 1 结束。原始文件不做任何修改，也不入库（见 `.gitignore`）。
-2. 标准化：把各来源的 CSV / JSON 转成统一结构，写入 `data/normalized/`。字段重命名、类型转换（如字符串数字转整数）、空值统一为 NULL。
+2. 标准化：构建器直接读取 `data/raw/` 中的 CSV，在内存中完成类型转换（字符串数字转整数、空值转 NULL），不生成中间文件。构建前按 `sources.json` 校验 PokeAPI 与 sindresorhus 原始文件的 sha256，缺失或不一致时以退出码 1 结束。`data/normalized/` 只存放阶段 0 的 Showdown 转储。
 3. 合并：按 `docs/development-plan.md` 中的字段权威来源表选取数据。中文文本回退顺序为 zh-Hans → zh-Hant → en，不自动生成或翻译任何中文文本。
-4. 冲突处理：不同来源的同一字段不一致时，不静默覆盖，写入冲突日志并由构建校验报告。
+4. 冲突处理：不同来源的同一字段不一致时，不静默覆盖，写入冲突日志并在构建报告中计数。冲突日志范围为物种简繁名（PokeAPI vs sindresorhus），PokeAPI 为采用值，输出 `data/generated/conflicts.csv`。Showdown 对比不在构建中执行，由 `tools/phase0/showdown_diff.py` 单独生成报告。
 5. 来源标记：每条文本记录带 `source` 字段，标明具体来自哪个来源和语言。
-6. 输出：生成只读的 `data/generated/pokedex.db`，其中 `meta` 表记录 `schema_version`、`data_version`、`build_date` 和 `source_versions`。
+6. 输出：生成只读的 `data/generated/pokedex.db`（连同 `conflicts.csv`、`build-report.md`，均不入库），其中 `meta` 表记录 `schema_version`、`data_version`、`build_date` 和 `source_versions`。
 
 属性克制倍率不预先存储，由应用根据 `type_efficacy` 动态计算。
 
@@ -50,6 +50,6 @@
 
 1. 在上表中更新目标来源的固定版本和获取日期。
 2. 重新运行获取脚本，确认 `data/metadata/sources.json` 中的 commit 与本文件一致。
-3. 重新运行构建脚本，确认完整性检查全部通过，冲突日志已人工复核。
+3. 重新运行构建脚本，确认完整性检查全部通过，冲突日志已人工复核。重新运行 `node tools/phase0/showdown_dump.mjs` 与 `python3 tools/phase0/showdown_diff.py`，复核 Showdown 差异报告。
 4. 递增 `data_version`，重新生成 `pokedex.db`。
 5. 用户数据存放在独立的 `user.db`，替换 `pokedex.db` 不会影响收藏与历史记录。
