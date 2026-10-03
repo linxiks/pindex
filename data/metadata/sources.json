@@ -1,0 +1,526 @@
+{
+  "data_version": 1,
+  "sources": {
+    "pokeapi": {
+      "commit": "bc92d3b6029ef1abe9e7ad424c400b338f3c11fe",
+      "files": {
+        "data/v2/csv/abilities.csv": {
+          "bytes": 7074,
+          "columns": [
+            "id",
+            "identifier",
+            "generation_id",
+            "is_main_series"
+          ],
+          "sha256": "74c3588ad48e08e54ff01f432899a4028c3e91508bbd53201df85e1f6b9e9ef3"
+        },
+        "data/v2/csv/ability_flavor_text.csv": {
+          "bytes": 1261989,
+          "columns": [
+            "ability_id",
+            "version_group_id",
+            "language_id",
+            "flavor_text"
+          ],
+          "sha256": "5ab2165547dce3897b1d88e654f0159511680b1d84f93fd4f265752b66904adb"
+        },
+        "data/v2/csv/ability_names.csv": {
+          "bytes": 65239,
+          "columns": [
+            "ability_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "8acb80c42210f86ae747dc3347b060d69cd2574a9dbfaf74774ae632ca6348da"
+        },
+        "data/v2/csv/egg_group_prose.csv": {
+          "bytes": 2041,
+          "columns": [
+            "egg_group_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "c5aab1da36e3c225b04613a778ffe9796b0e9e7825ef73849a0733379001b6a9"
+        },
+        "data/v2/csv/egg_groups.csv": {
+          "bytes": 163,
+          "columns": [
+            "id",
+            "identifier"
+          ],
+          "sha256": "71c825ac27eab7a08d8d42d2c9726276f167e3f6a22d4747598c6838c8d9680e"
+        },
+        "data/v2/csv/evolution_chains.csv": {
+          "bytes": 2643,
+          "columns": [
+            "id",
+            "baby_trigger_item_id"
+          ],
+          "sha256": "5159f0481eaa786f2b08e58356bcc6271e0982dceeb69746aaac4637d5a47125"
+        },
+        "data/v2/csv/evolution_triggers.csv": {
+          "bytes": 304,
+          "columns": [
+            "id",
+            "identifier"
+          ],
+          "sha256": "fb4b055fdb022eab3110147de669ae243c5497559257ad1f370c929ab6309a8c"
+        },
+        "data/v2/csv/generation_names.csv": {
+          "bytes": 1717,
+          "columns": [
+            "generation_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "cc9a12f1952b3ecc58a38c909f3488abd65bf19a9589c16ce61e39bc736c9231"
+        },
+        "data/v2/csv/generations.csv": {
+          "bytes": 194,
+          "columns": [
+            "id",
+            "main_region_id",
+            "identifier"
+          ],
+          "sha256": "d39634465251f1334aa0389b5adc4b4f2754eaec61f305fceb9432a3d4c96748"
+        },
+        "data/v2/csv/growth_rates.csv": {
+          "bytes": 879,
+          "columns": [
+            "id",
+            "identifier",
+            "formula"
+          ],
+          "sha256": "2691fea161441ce97085d70c0f466c0329a9a5a587a9797bb3b757da0e8090d0"
+        },
+        "data/v2/csv/item_categories.csv": {
+          "bytes": 922,
+          "columns": [
+            "id",
+            "pocket_id",
+            "identifier"
+          ],
+          "sha256": "8bfcaaf1dfe45d33a8cc374a602f2424e1c37ad68bab222f090cd95c691660d7"
+        },
+        "data/v2/csv/item_names.csv": {
+          "bytes": 498386,
+          "columns": [
+            "item_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "e286953dda52ceddb72c85079641f965bde6eab6fed2a576e292dce053a1af67"
+        },
+        "data/v2/csv/items.csv": {
+          "bytes": 59564,
+          "columns": [
+            "id",
+            "identifier",
+            "category_id",
+            "cost",
+            "fling_power",
+            "fling_effect_id"
+          ],
+          "sha256": "f08cd6dc30b447cb91cbe9232c79052e8521f32f6105bb1489b5bfabf4ca3241"
+        },
+        "data/v2/csv/languages.csv": {
+          "bytes": 291,
+          "columns": [
+            "id",
+            "iso639",
+            "iso3166",
+            "identifier",
+            "official",
+            "order"
+          ],
+          "sha256": "fbb60019a6a461783d5671a995d5f590db61792a273e90faa0ed630d102a19b8"
+        },
+        "data/v2/csv/move_damage_classes.csv": {
+          "bytes": 44,
+          "columns": [
+            "id",
+            "identifier"
+          ],
+          "sha256": "b7101ceca4dff152537a2fb5c439ca4030b05f86442c643812c0b7b6ccf16f1b"
+        },
+        "data/v2/csv/move_flavor_text.csv": {
+          "bytes": 5392794,
+          "columns": [
+            "move_id",
+            "version_group_id",
+            "language_id",
+            "flavor_text"
+          ],
+          "sha256": "43177df8d76dac477fc837aa19b2a50d74ee2c94e47fb827506768c58b360087"
+        },
+        "data/v2/csv/move_names.csv": {
+          "bytes": 202670,
+          "columns": [
+            "move_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "99e23ee38ea53d1473474d463b87651deac3cd4928750f8186feae66da45c147"
+        },
+        "data/v2/csv/moves.csv": {
+          "bytes": 42322,
+          "columns": [
+            "id",
+            "identifier",
+            "generation_id",
+            "type_id",
+            "power",
+            "pp",
+            "accuracy",
+            "priority",
+            "target_id",
+            "damage_class_id",
+            "effect_id",
+            "effect_chance",
+            "contest_type_id",
+            "contest_effect_id",
+            "super_contest_effect_id"
+          ],
+          "sha256": "8aafd37bf78f19471495c05b201545180f50f0a08a2a2a844d69f9837dd39ac9"
+        },
+        "data/v2/csv/nature_names.csv": {
+          "bytes": 3650,
+          "columns": [
+            "nature_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "a6bf8bedb9822d0e966a3036885e33e1306172b3a6566edc22d02ff2e7155031"
+        },
+        "data/v2/csv/natures.csv": {
+          "bytes": 586,
+          "columns": [
+            "id",
+            "identifier",
+            "decreased_stat_id",
+            "increased_stat_id",
+            "hates_flavor_id",
+            "likes_flavor_id",
+            "game_index"
+          ],
+          "sha256": "3536990f6adeaa1735551a6afe798649d22426e161c937da09d3ae9a5381309c"
+        },
+        "data/v2/csv/pokemon.csv": {
+          "bytes": 47082,
+          "columns": [
+            "id",
+            "identifier",
+            "species_id",
+            "height",
+            "weight",
+            "base_experience",
+            "order",
+            "is_default"
+          ],
+          "sha256": "16c81c33188b0eac403aa2f759fcbe9e42c611f722d263f5b5a6a5bff9f8ce6b"
+        },
+        "data/v2/csv/pokemon_abilities.csv": {
+          "bytes": 37224,
+          "columns": [
+            "pokemon_id",
+            "ability_id",
+            "is_hidden",
+            "slot"
+          ],
+          "sha256": "4a79ee53d386a8ad3a89657483ddfd31594e05a5d52400fe131e5e4dfd7ec04a"
+        },
+        "data/v2/csv/pokemon_dex_numbers.csv": {
+          "bytes": 80383,
+          "columns": [
+            "species_id",
+            "pokedex_id",
+            "pokedex_number"
+          ],
+          "sha256": "b8fe3353eec2b0ba4fc37e07e94ffa9f33ce96a7f9856c643a18b3ad518cd393"
+        },
+        "data/v2/csv/pokemon_egg_groups.csv": {
+          "bytes": 8141,
+          "columns": [
+            "species_id",
+            "egg_group_id"
+          ],
+          "sha256": "a49e707ed5eb26fd27233ce2699ae336ca1c445b66b02fd653e9a06fee9e3c5a"
+        },
+        "data/v2/csv/pokemon_evolution.csv": {
+          "bytes": 37836,
+          "columns": [
+            "id",
+            "evolved_species_id",
+            "evolution_trigger_id",
+            "version_group_id",
+            "is_default",
+            "trigger_item_id",
+            "minimum_level",
+            "gender_id",
+            "location_id",
+            "held_item_id",
+            "time_of_day",
+            "known_move_id",
+            "known_move_type_id",
+            "minimum_happiness",
+            "minimum_beauty",
+            "minimum_affection",
+            "relative_physical_stats",
+            "party_species_id",
+            "party_type_id",
+            "trade_species_id",
+            "needs_overworld_rain",
+            "turn_upside_down",
+            "needs_multiplayer",
+            "near_special_rock",
+            "region_id",
+            "required_pokemon_form_id",
+            "evolved_pokemon_form_id",
+            "used_move_id",
+            "minimum_move_count",
+            "minimum_steps",
+            "minimum_damage_taken",
+            "nature_bitmask",
+            "condition_expression",
+            "percentage_chance"
+          ],
+          "sha256": "e78be51c8805551fffccd5551a556e752e4a76ff1b52482b53b409dd3882e1dd"
+        },
+        "data/v2/csv/pokemon_form_names.csv": {
+          "bytes": 140994,
+          "columns": [
+            "pokemon_form_id",
+            "local_language_id",
+            "form_name",
+            "pokemon_name"
+          ],
+          "sha256": "f496066d02fab12c18d10cce0af2f748d09cb7e296ecc784cc8682f8c4da8625"
+        },
+        "data/v2/csv/pokemon_forms.csv": {
+          "bytes": 63721,
+          "columns": [
+            "id",
+            "identifier",
+            "form_identifier",
+            "pokemon_id",
+            "introduced_in_version_group_id",
+            "is_default",
+            "is_battle_only",
+            "is_mega",
+            "form_order",
+            "order"
+          ],
+          "sha256": "99bf8f7ad4dc1f2e291357a090cef6a575623ec3cbf9030d0e33656e6e608ae2"
+        },
+        "data/v2/csv/pokemon_move_methods.csv": {
+          "bytes": 187,
+          "columns": [
+            "id",
+            "identifier"
+          ],
+          "sha256": "78b75acfcf6dca4c82da9d4851357cbbd65e61b08154eddfc2ace0efd00e408e"
+        },
+        "data/v2/csv/pokemon_moves.csv": {
+          "bytes": 10733699,
+          "columns": [
+            "pokemon_id",
+            "version_group_id",
+            "move_id",
+            "pokemon_move_method_id",
+            "level",
+            "order",
+            "mastery"
+          ],
+          "sha256": "22a807cef26891eeac0d0c900bd363e66baf421f7ee795bc7bc3e718f23b939e"
+        },
+        "data/v2/csv/pokemon_species.csv": {
+          "bytes": 56884,
+          "columns": [
+            "id",
+            "identifier",
+            "generation_id",
+            "evolves_from_species_id",
+            "evolution_chain_id",
+            "color_id",
+            "shape_id",
+            "habitat_id",
+            "gender_rate",
+            "capture_rate",
+            "base_happiness",
+            "is_baby",
+            "hatch_counter",
+            "has_gender_differences",
+            "growth_rate_id",
+            "forms_switchable",
+            "is_legendary",
+            "is_mythical",
+            "order",
+            "conquest_order"
+          ],
+          "sha256": "e66e2eeb25fd3836b0ebab6bf87bbf01960aa3c0555e2bac495fa8393c5e0c45"
+        },
+        "data/v2/csv/pokemon_species_flavor_text.csv": {
+          "bytes": 9206001,
+          "columns": [
+            "species_id",
+            "version_id",
+            "language_id",
+            "flavor_text"
+          ],
+          "sha256": "c341e602ab623084fef4c44ca4a174938e617802cfcf2deec830d824f688dc69"
+        },
+        "data/v2/csv/pokemon_species_names.csv": {
+          "bytes": 404502,
+          "columns": [
+            "pokemon_species_id",
+            "local_language_id",
+            "name",
+            "genus"
+          ],
+          "sha256": "820cde17074cdb1c2b0595c997fb8f998e773bd5da3bb525dec85703c86c5fd9"
+        },
+        "data/v2/csv/pokemon_stats.csv": {
+          "bytes": 94392,
+          "columns": [
+            "pokemon_id",
+            "stat_id",
+            "base_stat",
+            "effort"
+          ],
+          "sha256": "fa2c44263a3706468682fefc3e0b3c4f5487fe9febed7d4ebcd6939c34b16aa8"
+        },
+        "data/v2/csv/pokemon_types.csv": {
+          "bytes": 19058,
+          "columns": [
+            "pokemon_id",
+            "type_id",
+            "slot"
+          ],
+          "sha256": "f1fc4bfd657a034ea3bf6972423b10276424aa068577b304a78a08996425ba05"
+        },
+        "data/v2/csv/stat_names.csv": {
+          "bytes": 1130,
+          "columns": [
+            "stat_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "c58f9cc3c0b3bd004f9e5b84ba7590e42f15ffc6f2d58acc7ee39c9298ae83c3"
+        },
+        "data/v2/csv/stats.csv": {
+          "bytes": 202,
+          "columns": [
+            "id",
+            "damage_class_id",
+            "identifier",
+            "is_battle_only",
+            "game_index"
+          ],
+          "sha256": "ee8c541b45b64f40f0eb2545c767294b5801ce8a1410e19d8c33a54e6f1c3b9c"
+        },
+        "data/v2/csv/type_efficacy.csv": {
+          "bytes": 2883,
+          "columns": [
+            "damage_type_id",
+            "target_type_id",
+            "damage_factor"
+          ],
+          "sha256": "cdd7de4066680414d0a2433af805f139f425d6350cbf998ecab559a0fe8ff587"
+        },
+        "data/v2/csv/type_names.csv": {
+          "bytes": 2843,
+          "columns": [
+            "type_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "685230c51074cf2f723debcf827a4df4c36ab0ec7e929c806ad65a3e40958705"
+        },
+        "data/v2/csv/types.csv": {
+          "bytes": 321,
+          "columns": [
+            "id",
+            "identifier",
+            "generation_id",
+            "damage_class_id"
+          ],
+          "sha256": "37f039c8d722f47d51ba1c5c5ecf9b7007235b1a9a1af2827645c777b70307c8"
+        },
+        "data/v2/csv/version_groups.csv": {
+          "bytes": 726,
+          "columns": [
+            "id",
+            "identifier",
+            "generation_id",
+            "order"
+          ],
+          "sha256": "28da8d89d8eb4966941f81a9e62b3990510ed4d76dd774158246551a8e7707a7"
+        },
+        "data/v2/csv/version_names.csv": {
+          "bytes": 8943,
+          "columns": [
+            "version_id",
+            "local_language_id",
+            "name"
+          ],
+          "sha256": "23e3e9062f98e1f83d475b9eeac57ddff4375b46c175948a65c4fe8d3e1d87b4"
+        },
+        "data/v2/csv/versions.csv": {
+          "bytes": 907,
+          "columns": [
+            "id",
+            "version_group_id",
+            "identifier"
+          ],
+          "sha256": "70083465865a6a69a9aad2be3fc3915078c6ff740f14a090b1367d8ec9cfc3cd"
+        }
+      },
+      "license": "BSD-3-Clause",
+      "repo": "PokeAPI/pokeapi",
+      "retrieved": "2026-10-03"
+    },
+    "pokeapi-sprites": {
+      "commit": "bfb75391935310368065096fa08c51e8970bc43e",
+      "files": {},
+      "license": "CC0-1.0（图像版权归 The Pokémon Company）",
+      "repo": "PokeAPI/sprites",
+      "retrieved": "2026-10-03"
+    },
+    "showdown": {
+      "commit": "3661ce40bf9001d185ce078b8920e12304204609",
+      "files": {
+        "data/learnsets.ts": {
+          "bytes": 3725143,
+          "sha256": "26969c5e9ca7310b701612da8c9cea217b7d43efb8cd22a7e46783a6ca9b386e"
+        },
+        "data/pokedex.ts": {
+          "bytes": 538263,
+          "sha256": "73048386b864be5aff093e9393acf32e8016299e9d7b76078bf5120b769e2fe0"
+        },
+        "data/typechart.ts": {
+          "bytes": 6745,
+          "sha256": "7b0eae126bdcf98edfd71cbe75af00b763f5f0d5db36024b6f3e7c5e4aea95ac"
+        }
+      },
+      "license": "MIT",
+      "repo": "smogon/pokemon-showdown",
+      "retrieved": "2026-10-03"
+    },
+    "sindresorhus-pokemon": {
+      "commit": "671b777e5df2b4795050adec3e4c8a9a52cafafb",
+      "files": {
+        "data/zh-hans.json": {
+          "bytes": 15203,
+          "sha256": "5dc488c15afc3bfb55fec4adb41e02edf858a22c64681aec2e7c2721e5e0854a"
+        },
+        "data/zh-hant.json": {
+          "bytes": 15205,
+          "sha256": "a9083ca21ee5c6250074f40676cb7761af5023b74125a4e6bfdd636eed357853"
+        }
+      },
+      "license": "MIT",
+      "repo": "sindresorhus/pokemon",
+      "retrieved": "2026-10-03"
+    }
+  }
+}
