@@ -1,0 +1,37 @@
+pindex
+======
+
+The source code of this project is released under the MIT License.
+See the LICENSE file. The LICENSE file covers code only. Data and images
+are governed by the licenses of their respective sources; see DATA_SOURCES.md.
+
+Trademarks
+----------
+
+Pokémon and Pokémon character names are trademarks of Nintendo, Creatures Inc.
+and GAME FREAK inc. This project is unofficial and is not affiliated with or
+endorsed by them.
+
+Third-party data
+----------------
+
+Name — URL — License — Copyright notice
+
+PokeAPI — https://github.com/PokeAPI/pokeapi — BSD-3-Clause —
+  "Copyright (c) © 2013–2023 Paul Hallett and PokéAPI contributors ...
+  Pokémon and Pokémon character names are trademarks of Nintendo."
+  (Reproduce the full BSD-3-Clause text from the upstream LICENSE file when
+  distributing data derived from it.)
+
+Pokémon Showdown (server) — https://github.com/smogon/pokemon-showdown — MIT —
+  "Copyright (c) 2011-2026 Guangcong Luo and other contributors"
+
+sindresorhus/pokemon — https://github.com/sindresorhus/pokemon — MIT —
+  see upstream license
+
+Redistribution requirements
+---------------------------
+
+BSD-3-Clause requires that redistributions retain the copyright notice,
+the list of conditions and the disclaimer. The application's open source
+licenses page will display the contents of this file.
