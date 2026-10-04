@@ -304,3 +304,109 @@ data class EvolutionEntity(
     @ColumnInfo(name = "trade_species_id") val tradeSpeciesId: Int?,
     @ColumnInfo(name = "raw_conditions") val rawConditions: String,
 )
+
+@Entity(
+    tableName = "version",
+    foreignKeys = [
+        ForeignKey(entity = VersionGroupEntity::class, parentColumns = ["id"], childColumns = ["version_group_id"]),
+    ],
+)
+data class VersionEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "version_group_id") val versionGroupId: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+)
+
+@Entity(
+    tableName = "ability",
+    foreignKeys = [
+        ForeignKey(entity = GenerationEntity::class, parentColumns = ["id"], childColumns = ["generation_id"]),
+    ],
+)
+data class AbilityEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+    @ColumnInfo(name = "generation_id") val generationId: Int,
+)
+
+@Entity(
+    tableName = "pokemon_ability",
+    primaryKeys = ["pokemon_id", "slot"],
+    foreignKeys = [
+        ForeignKey(entity = PokemonEntity::class, parentColumns = ["id"], childColumns = ["pokemon_id"]),
+        ForeignKey(entity = AbilityEntity::class, parentColumns = ["id"], childColumns = ["ability_id"]),
+    ],
+    indices = [Index("ability_id")],
+)
+data class PokemonAbilityEntity(
+    @ColumnInfo(name = "pokemon_id") val pokemonId: Int,
+    @ColumnInfo(name = "slot") val slot: Int,
+    @ColumnInfo(name = "ability_id") val abilityId: Int,
+    @ColumnInfo(name = "is_hidden") val isHidden: Boolean,
+)
+
+@Entity(tableName = "move_method")
+data class MoveMethodEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+)
+
+@Entity(
+    tableName = "pokemon_move",
+    primaryKeys = ["pokemon_id", "version_group_id", "move_id", "method_id", "level"],
+    foreignKeys = [
+        ForeignKey(entity = PokemonEntity::class, parentColumns = ["id"], childColumns = ["pokemon_id"]),
+        ForeignKey(entity = VersionGroupEntity::class, parentColumns = ["id"], childColumns = ["version_group_id"]),
+        ForeignKey(entity = MoveEntity::class, parentColumns = ["id"], childColumns = ["move_id"]),
+        ForeignKey(entity = MoveMethodEntity::class, parentColumns = ["id"], childColumns = ["method_id"]),
+    ],
+    // WITHOUT ROWID: SQLite appends the remaining PK columns to every secondary index, and Room
+    // reads them back from index_xinfo. Listing them is the same index as schema.sql's (move_id, version_group_id).
+    indices = [
+        Index(
+            value = ["move_id", "version_group_id", "pokemon_id", "method_id", "level"],
+            name = "index_pokemon_move_move_id_version_group_id",
+        ),
+    ],
+)
+data class PokemonMoveEntity(
+    @ColumnInfo(name = "pokemon_id") val pokemonId: Int,
+    @ColumnInfo(name = "version_group_id") val versionGroupId: Int,
+    @ColumnInfo(name = "move_id") val moveId: Int,
+    @ColumnInfo(name = "method_id") val methodId: Int,
+    @ColumnInfo(name = "level") val level: Int,
+    @ColumnInfo(name = "sort_order") val sortOrder: Int?,
+    @ColumnInfo(name = "mastery") val mastery: Int?,
+)
+
+@Entity(
+    tableName = "ability_flavor_text",
+    primaryKeys = ["ability_id", "version_group_id", "lang"],
+    foreignKeys = [
+        ForeignKey(entity = AbilityEntity::class, parentColumns = ["id"], childColumns = ["ability_id"]),
+        ForeignKey(entity = VersionGroupEntity::class, parentColumns = ["id"], childColumns = ["version_group_id"]),
+    ],
+)
+data class AbilityFlavorTextEntity(
+    @ColumnInfo(name = "ability_id") val abilityId: Int,
+    @ColumnInfo(name = "version_group_id") val versionGroupId: Int,
+    @ColumnInfo(name = "lang") val lang: String,
+    @ColumnInfo(name = "text") val text: String,
+    @ColumnInfo(name = "source") val source: String,
+)
+
+@Entity(
+    tableName = "move_flavor_text",
+    primaryKeys = ["move_id", "version_group_id", "lang"],
+    foreignKeys = [
+        ForeignKey(entity = MoveEntity::class, parentColumns = ["id"], childColumns = ["move_id"]),
+        ForeignKey(entity = VersionGroupEntity::class, parentColumns = ["id"], childColumns = ["version_group_id"]),
+    ],
+)
+data class MoveFlavorTextEntity(
+    @ColumnInfo(name = "move_id") val moveId: Int,
+    @ColumnInfo(name = "version_group_id") val versionGroupId: Int,
+    @ColumnInfo(name = "lang") val lang: String,
+    @ColumnInfo(name = "text") val text: String,
+    @ColumnInfo(name = "source") val source: String,
+)

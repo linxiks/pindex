@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -36,6 +37,7 @@ private const val SKELETON_COUNT = 6
 /**
  * Two-column pokemon card grid shared by the pokedex and search pages.
  * [items] == null shows skeleton cards in the same grid, so [state] survives the Loading → Content switch.
+ * [header] items come first; give them full-line spans.
  */
 @Composable
 fun PokemonGrid(
@@ -43,6 +45,7 @@ fun PokemonGrid(
     onOpenPokemon: (Int) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
+    header: LazyGridScope.() -> Unit = {},
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -52,6 +55,7 @@ fun PokemonGrid(
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         verticalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
+        header()
         if (items == null) {
             items(SKELETON_COUNT) { SkeletonCard() }
         } else {

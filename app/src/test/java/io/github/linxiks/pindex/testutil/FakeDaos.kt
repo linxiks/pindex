@@ -2,11 +2,15 @@ package io.github.linxiks.pindex.testutil
 
 import io.github.linxiks.pindex.data.local.ChainSpeciesRow
 import io.github.linxiks.pindex.data.local.EvolutionRow
+import io.github.linxiks.pindex.data.local.FlavorRow
 import io.github.linxiks.pindex.data.local.FormRow
+import io.github.linxiks.pindex.data.local.LearnRow
+import io.github.linxiks.pindex.data.local.MoveRow
 import io.github.linxiks.pindex.data.local.NameRow
 import io.github.linxiks.pindex.data.local.PokemonDao
 import io.github.linxiks.pindex.data.local.PokemonDetailRow
 import io.github.linxiks.pindex.data.local.PokemonListRow
+import io.github.linxiks.pindex.data.local.PokemonAbilityRow
 import io.github.linxiks.pindex.data.local.PokemonTypeRow
 import io.github.linxiks.pindex.data.local.SearchDao
 import io.github.linxiks.pindex.data.local.SearchIdRow
@@ -14,6 +18,7 @@ import io.github.linxiks.pindex.data.local.SearchRow
 import io.github.linxiks.pindex.data.local.StatRow
 import io.github.linxiks.pindex.data.local.TypeRow
 import io.github.linxiks.pindex.data.local.TypeEfficacyRow
+import io.github.linxiks.pindex.data.local.VersionRow
 
 /** Three default pokemon: 1 and 25 in generation 1, 152 in generation 2. */
 class FakePokemonDao : PokemonDao {
@@ -56,6 +61,15 @@ class FakePokemonDao : PokemonDao {
     override suspend fun typeEfficacy() = emptyList<TypeEfficacyRow>()
     override suspend fun chainSpecies(chainId: Int) = emptyList<ChainSpeciesRow>()
     override suspend fun chainEvolutions(chainId: Int) = emptyList<EvolutionRow>()
+    override suspend fun pokemonAbilities(pokemonId: Int) = emptyList<PokemonAbilityRow>()
+    override suspend fun abilityIdentifier(abilityId: Int): String? = null
+    override suspend fun abilityFlavor(ids: List<Int>) = emptyList<FlavorRow>()
+    override suspend fun abilitySpecies(abilityId: Int) = emptyList<Int>()
+    override suspend fun move(moveId: Int): MoveRow? = null
+    override suspend fun moveFlavor(moveId: Int) = emptyList<FlavorRow>()
+    override suspend fun moveSpecies(moveId: Int) = emptyList<Int>()
+    override suspend fun pokemonMoves(pokemonId: Int) = emptyList<LearnRow>()
+    override suspend fun versionGroupVersions() = emptyList<VersionRow>()
 }
 
 /** Matches "皮卡丘" by prefix (皮, 皮卡, 皮卡丘) and by contains (卡, 丘); nothing else. */

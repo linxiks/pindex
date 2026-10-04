@@ -30,8 +30,15 @@ import androidx.room.RoomDatabase
         RegionEntity::class,
         LocationEntity::class,
         EvolutionEntity::class,
+        VersionEntity::class,
+        AbilityEntity::class,
+        PokemonAbilityEntity::class,
+        MoveMethodEntity::class,
+        PokemonMoveEntity::class,
+        AbilityFlavorTextEntity::class,
+        MoveFlavorTextEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class PokedexDatabase : RoomDatabase() {

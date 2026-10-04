@@ -55,6 +55,33 @@ interface PokemonDao {
 
     @Query(Queries.CHAIN_EVOLUTIONS)
     suspend fun chainEvolutions(chainId: Int): List<EvolutionRow>
+
+    @Query(Queries.POKEMON_ABILITIES)
+    suspend fun pokemonAbilities(pokemonId: Int): List<PokemonAbilityRow>
+
+    @Query(Queries.ABILITY_IDENTIFIER)
+    suspend fun abilityIdentifier(abilityId: Int): String?
+
+    @Query(Queries.ABILITY_FLAVOR)
+    suspend fun abilityFlavor(ids: List<Int>): List<FlavorRow>
+
+    @Query(Queries.ABILITY_SPECIES)
+    suspend fun abilitySpecies(abilityId: Int): List<Int>
+
+    @Query(Queries.MOVE_DETAIL)
+    suspend fun move(moveId: Int): MoveRow?
+
+    @Query(Queries.MOVE_FLAVOR)
+    suspend fun moveFlavor(moveId: Int): List<FlavorRow>
+
+    @Query(Queries.MOVE_SPECIES)
+    suspend fun moveSpecies(moveId: Int): List<Int>
+
+    @Query(Queries.POKEMON_MOVES)
+    suspend fun pokemonMoves(pokemonId: Int): List<LearnRow>
+
+    @Query(Queries.VERSION_GROUP_VERSIONS)
+    suspend fun versionGroupVersions(): List<VersionRow>
 }
 
 @Dao

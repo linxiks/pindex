@@ -2,10 +2,14 @@ package io.github.linxiks.pindex.testutil
 
 import io.github.linxiks.pindex.data.local.ChainSpeciesRow
 import io.github.linxiks.pindex.data.local.EvolutionRow
+import io.github.linxiks.pindex.data.local.FlavorRow
 import io.github.linxiks.pindex.data.local.FormRow
+import io.github.linxiks.pindex.data.local.LearnRow
 import io.github.linxiks.pindex.data.local.MetaDao
 import io.github.linxiks.pindex.data.local.MetaEntity
 import io.github.linxiks.pindex.data.local.NameRow
+import io.github.linxiks.pindex.data.local.MoveRow
+import io.github.linxiks.pindex.data.local.PokemonAbilityRow
 import io.github.linxiks.pindex.data.local.PokemonDao
 import io.github.linxiks.pindex.data.local.PokemonDetailRow
 import io.github.linxiks.pindex.data.local.PokemonListRow
@@ -17,6 +21,7 @@ import io.github.linxiks.pindex.data.local.SearchRow
 import io.github.linxiks.pindex.data.local.StatRow
 import io.github.linxiks.pindex.data.local.TypeEfficacyRow
 import io.github.linxiks.pindex.data.local.TypeRow
+import io.github.linxiks.pindex.data.local.VersionRow
 import java.sql.ResultSet
 
 // DAO implementations that execute the same Queries constants Room uses, against the real database.
@@ -35,6 +40,9 @@ private fun nameRow(rs: ResultSet) =
 
 private fun searchRow(rs: ResultSet) =
     SearchRow(rs.getInt("entityId"), rs.getString("display"), rs.getInt("priority"))
+
+private fun flavorRow(rs: ResultSet) =
+    FlavorRow(rs.getInt("entityId"), rs.getString("lang"), rs.getString("text"), rs.getInt("sortOrder"))
 
 class JdbcPokemonDao : PokemonDao {
     override suspend fun defaultPokemon() = PokedexJdbc.query(Queries.DEFAULT_POKEMON) {
@@ -115,6 +123,58 @@ class JdbcPokemonDao : PokemonDao {
                 rawConditions = it.getString("rawConditions"),
             )
         }
+
+    override suspend fun pokemonAbilities(pokemonId: Int) =
+        PokedexJdbc.query(Queries.POKEMON_ABILITIES, mapOf("pokemonId" to pokemonId)) {
+            PokemonAbilityRow(it.getInt("slot"), it.getInt("abilityId"), it.getBool("isHidden"))
+        }
+
+    override suspend fun abilityIdentifier(abilityId: Int) =
+        PokedexJdbc.query(Queries.ABILITY_IDENTIFIER, mapOf("abilityId" to abilityId)) { it.getString(1) }
+            .singleOrNull()
+
+    override suspend fun abilityFlavor(ids: List<Int>): List<FlavorRow> =
+        if (ids.isEmpty()) emptyList()
+        else PokedexJdbc.query(Queries.ABILITY_FLAVOR, mapOf("ids" to ids), ::flavorRow)
+
+    override suspend fun abilitySpecies(abilityId: Int) =
+        PokedexJdbc.query(Queries.ABILITY_SPECIES, mapOf("abilityId" to abilityId)) { it.getInt(1) }
+
+    override suspend fun move(moveId: Int) =
+        PokedexJdbc.query(Queries.MOVE_DETAIL, mapOf("moveId" to moveId)) {
+            MoveRow(
+                id = it.getInt("id"),
+                typeId = it.getInt("typeId"),
+                damageClassId = it.getInt("damageClassId"),
+                power = it.getIntOrNull("power"),
+                accuracy = it.getIntOrNull("accuracy"),
+                pp = it.getInt("pp"),
+            )
+        }.singleOrNull()
+
+    override suspend fun moveFlavor(moveId: Int) =
+        PokedexJdbc.query(Queries.MOVE_FLAVOR, mapOf("moveId" to moveId), ::flavorRow)
+
+    override suspend fun moveSpecies(moveId: Int) =
+        PokedexJdbc.query(Queries.MOVE_SPECIES, mapOf("moveId" to moveId)) { it.getInt(1) }
+
+    override suspend fun pokemonMoves(pokemonId: Int) =
+        PokedexJdbc.query(Queries.POKEMON_MOVES, mapOf("pokemonId" to pokemonId)) {
+            LearnRow(
+                versionGroupId = it.getInt("versionGroupId"),
+                moveId = it.getInt("moveId"),
+                methodIdentifier = it.getString("methodIdentifier"),
+                level = it.getInt("level"),
+                sortOrder = it.getIntOrNull("sortOrder"),
+                typeId = it.getInt("typeId"),
+                damageClassId = it.getInt("damageClassId"),
+                power = it.getIntOrNull("power"),
+            )
+        }
+
+    override suspend fun versionGroupVersions() = PokedexJdbc.query(Queries.VERSION_GROUP_VERSIONS) {
+        VersionRow(it.getInt("versionGroupId"), it.getString("identifier"), it.getInt("sortOrder"), it.getInt("versionId"))
+    }
 }
 
 class JdbcSearchDao : SearchDao {

@@ -28,6 +28,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +39,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.linxiks.pindex.R
+import io.github.linxiks.pindex.core.components.AbilityItem
 import io.github.linxiks.pindex.core.components.DamageMultiplierGroup
 import io.github.linxiks.pindex.core.components.EmptyState
 import io.github.linxiks.pindex.core.components.InfoGrid
@@ -51,6 +53,7 @@ import io.github.linxiks.pindex.core.components.localizedAnnotated
 import io.github.linxiks.pindex.core.theme.PindexTheme
 import io.github.linxiks.pindex.core.theme.Spacing
 import io.github.linxiks.pindex.data.model.PokemonDetail
+import io.github.linxiks.pindex.domain.MoveMethodGroup
 import io.github.linxiks.pindex.domain.formatGender
 import io.github.linxiks.pindex.domain.formatHeight
 import io.github.linxiks.pindex.domain.formatMultiplier
@@ -62,18 +65,35 @@ import io.github.linxiks.pindex.ui.preview.SampleData
 fun PokemonDetailScreen(
     onBack: () -> Unit,
     onOpenPokemon: (Int) -> Unit,
+    onOpenAbility: (Int) -> Unit,
+    onOpenMove: (Int) -> Unit,
     viewModel: PokemonDetailViewModel = viewModel(factory = PokemonDetailViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    PokemonDetailContent(state = state, onBack = onBack, onOpenPokemon = onOpenPokemon)
+    val moveSelection by viewModel.moveSelection.collectAsStateWithLifecycle()
+    PokemonDetailContent(
+        state = state,
+        moveSelection = moveSelection,
+        onBack = onBack,
+        onOpenPokemon = onOpenPokemon,
+        onOpenAbility = onOpenAbility,
+        onOpenMove = onOpenMove,
+        onSelectVersionGroup = viewModel::selectVersionGroup,
+        onSelectMoveGroup = viewModel::selectMoveGroup,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PokemonDetailContent(
     state: DetailUiState,
+    moveSelection: MoveSelection,
     onBack: () -> Unit,
     onOpenPokemon: (Int) -> Unit,
+    onOpenAbility: (Int) -> Unit,
+    onOpenMove: (Int) -> Unit,
+    onSelectVersionGroup: (Int) -> Unit,
+    onSelectMoveGroup: (MoveMethodGroup) -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -106,15 +126,34 @@ fun PokemonDetailContent(
                 message = stringResource(R.string.load_error_message),
                 modifier = modifier,
             )
-            is DetailUiState.Content -> DetailBody(state.detail, onOpenPokemon, modifier)
+            is DetailUiState.Content -> DetailBody(
+                detail = state.detail,
+                moveSelection = moveSelection,
+                onOpenPokemon = onOpenPokemon,
+                onOpenAbility = onOpenAbility,
+                onOpenMove = onOpenMove,
+                onSelectVersionGroup = onSelectVersionGroup,
+                onSelectMoveGroup = onSelectMoveGroup,
+                modifier = modifier,
+            )
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DetailBody(detail: PokemonDetail, onOpenPokemon: (Int) -> Unit, modifier: Modifier) {
+private fun DetailBody(
+    detail: PokemonDetail,
+    moveSelection: MoveSelection,
+    onOpenPokemon: (Int) -> Unit,
+    onOpenAbility: (Int) -> Unit,
+    onOpenMove: (Int) -> Unit,
+    onSelectVersionGroup: (Int) -> Unit,
+    onSelectMoveGroup: (MoveMethodGroup) -> Unit,
+    modifier: Modifier,
+) {
     val basicInfo = basicInfoItems(detail)
+    val moveView = remember(detail.learnset, moveSelection) { resolveMoveView(detail.learnset, moveSelection) }
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, bottom = Spacing.xl),
@@ -144,6 +183,21 @@ private fun DetailBody(detail: PokemonDetail, onOpenPokemon: (Int) -> Unit, modi
                 detail.damageTaken.forEach { DamageMultiplierGroup(formatMultiplier(it.percent), it.types) }
             }
         }
+        if (detail.abilities.isNotEmpty()) {
+            item(key = "abilities") {
+                Column {
+                    SectionHeader(stringResource(R.string.section_abilities))
+                    detail.abilities.forEach {
+                        AbilityItem(
+                            name = it.name,
+                            effect = it.effect,
+                            isHidden = it.isHidden,
+                            onClick = { onOpenAbility(it.abilityId) },
+                        )
+                    }
+                }
+            }
+        }
         item(key = "evolution") {
             Column {
                 SectionHeader(stringResource(R.string.section_evolution))
@@ -168,6 +222,7 @@ private fun DetailBody(detail: PokemonDetail, onOpenPokemon: (Int) -> Unit, modi
                 }
             }
         }
+        movesSection(detail.learnset, moveView, onSelectVersionGroup, onSelectMoveGroup, onOpenMove)
     }
 }
 
@@ -273,7 +328,16 @@ private fun growthRateLabel(detail: PokemonDetail): String =
 private fun PokemonDetailContentPreview() {
     PindexTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            PokemonDetailContent(DetailUiState.Content(SampleData.pikachu), onBack = {}, onOpenPokemon = {})
+            PokemonDetailContent(
+                state = DetailUiState.Content(SampleData.pikachu),
+                moveSelection = MoveSelection(),
+                onBack = {},
+                onOpenPokemon = {},
+                onOpenAbility = {},
+                onOpenMove = {},
+                onSelectVersionGroup = {},
+                onSelectMoveGroup = {},
+            )
         }
     }
 }

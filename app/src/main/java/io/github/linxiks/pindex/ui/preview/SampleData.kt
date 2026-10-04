@@ -1,14 +1,21 @@
 package io.github.linxiks.pindex.ui.preview
 
+import io.github.linxiks.pindex.data.model.AbilityDetail
+import io.github.linxiks.pindex.data.model.AbilitySlot
 import io.github.linxiks.pindex.data.model.Generation
 import io.github.linxiks.pindex.data.model.DamageGroup
 import io.github.linxiks.pindex.data.model.EvolutionNode
 import io.github.linxiks.pindex.data.model.FormLink
+import io.github.linxiks.pindex.data.model.LearnedMove
+import io.github.linxiks.pindex.data.model.Learnset
+import io.github.linxiks.pindex.data.model.MoveDetail
 import io.github.linxiks.pindex.data.model.PokemonDetail
 import io.github.linxiks.pindex.data.model.PokemonListItem
 import io.github.linxiks.pindex.data.model.StatValue
 import io.github.linxiks.pindex.data.model.TypeInfo
+import io.github.linxiks.pindex.data.model.VersionGroupOption
 import io.github.linxiks.pindex.domain.LocalizedText
+import io.github.linxiks.pindex.domain.MoveMethodGroup
 
 /** Preview-only data: the five pokemon of design.md §60. */
 object SampleData {
@@ -85,9 +92,43 @@ object SampleData {
                 ),
             ),
         ),
+        abilities = listOf(
+            AbilitySlot(9, zh("静电"), zh("身上带有静电，有时会让接触到的对手麻痹。"), false),
+            AbilitySlot(31, zh("避雷针"), zh("将电属性的招式吸引到自己身上，不会受到伤害，而是会提高特攻。"), true),
+        ),
+        learnset = Learnset(
+            versionGroups = listOf(VersionGroupOption(25, "scarlet-violet", listOf(zh("朱"), zh("紫")))),
+            defaultVersionGroupId = 25,
+            moves = listOf(
+                LearnedMove(609, 25, MoveMethodGroup.LevelUp, 1, zh("蹭蹭脸颊"), electric, zh("物理"), 20),
+                LearnedMove(86, 25, MoveMethodGroup.LevelUp, 4, zh("电磁波"), electric, zh("变化"), null),
+                LearnedMove(85, 25, MoveMethodGroup.LevelUp, 36, zh("十万伏特"), electric, zh("特殊"), 90),
+            ),
+        ),
         otherForms = listOf(
             FormLink(10080, LocalizedText("Pikachu Rock Star", "en"), "pikachu-rock-star"),
             FormLink(10094, LocalizedText("Original Cap", "en"), "pikachu-original-cap"),
         ),
+    )
+
+    val intimidate = AbilityDetail(
+        abilityId = 22,
+        name = zh("威吓"),
+        enName = "Intimidate",
+        effect = zh("出场时威吓对手，让其退缩，降低对手的攻击。"),
+        holders = pokemon.take(3),
+    )
+
+    val thunderbolt = MoveDetail(
+        moveId = 85,
+        name = zh("十万伏特"),
+        enName = "Thunderbolt",
+        type = electric,
+        damageClass = zh("特殊"),
+        power = 90,
+        accuracy = 100,
+        pp = 15,
+        description = zh("向对手发出强力电击进行攻击。有时会让对手陷入麻痹状态。"),
+        learners = pokemon.filter { it.speciesId == 25 },
     )
 }

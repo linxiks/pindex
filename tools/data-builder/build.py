@@ -33,7 +33,7 @@ from builder.search import build_search_index  # noqa: E402
 from builder.texts import import_flavor_texts, import_localized_names  # noqa: E402
 from fetch import sha256_file  # noqa: E402
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 SCHEMA = Path(__file__).resolve().parent / "schema.sql"
 BUILD_SOURCES = ("pokeapi", "sindresorhus-pokemon")
 

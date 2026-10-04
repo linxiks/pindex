@@ -65,6 +65,36 @@
     <string name="info_generation">世代</string>
     <string name="stat_total">总和</string>
 
+    <!-- Abilities -->
+    <string name="section_abilities">特性</string>
+    <string name="ability_hidden">隐藏特性</string>
+    <string name="section_ability_effect">效果</string>
+    <string name="section_ability_holders">拥有该特性的宝可梦</string>
+    <string name="ability_holders_none">暂无宝可梦拥有该特性</string>
+    <string name="ability_not_found_title">没有找到这个特性</string>
+    <string name="ability_not_found_message">请返回上一页重新选择</string>
+    <string name="flavor_missing">暂无说明</string>
+
+    <!-- Moves -->
+    <string name="section_moves">招式</string>
+    <string name="move_version_label">游戏版本</string>
+    <string name="move_group_level_up">升级</string>
+    <string name="move_group_machine">招式机器</string>
+    <string name="move_group_egg">遗传</string>
+    <string name="move_group_other">其他</string>
+    <string name="move_level">Lv.%1$d</string>
+    <string name="move_level_evolve">进化</string>
+    <string name="moves_none">暂无招式资料</string>
+    <string name="move_damage_class">分类</string>
+    <string name="move_power">威力</string>
+    <string name="move_accuracy">命中</string>
+    <string name="move_pp">PP</string>
+    <string name="section_move_description">招式说明</string>
+    <string name="section_move_learners">可学习的宝可梦</string>
+    <string name="move_learners_none">暂无可学习的宝可梦</string>
+    <string name="move_not_found_title">没有找到这个招式</string>
+    <string name="move_not_found_message">请返回上一页重新选择</string>
+
     <!-- Growth rates by identifier -->
     <string name="growth_slow">慢</string>
     <string name="growth_medium">较快</string>

@@ -84,4 +84,43 @@ object Queries {
     const val SEARCH_SPECIES_CONTAINS =
         "SELECT entity_id AS entityId, display, priority FROM search_index " +
             "WHERE entity = 'species' AND instr(term, :q) > 0"
+
+    const val POKEMON_ABILITIES =
+        "SELECT slot, ability_id AS abilityId, is_hidden AS isHidden FROM pokemon_ability " +
+            "WHERE pokemon_id = :pokemonId ORDER BY slot"
+
+    const val ABILITY_IDENTIFIER = "SELECT identifier FROM ability WHERE id = :abilityId"
+
+    const val ABILITY_FLAVOR =
+        "SELECT f.ability_id AS entityId, f.lang AS lang, f.text AS text, vg.sort_order AS sortOrder " +
+            "FROM ability_flavor_text f JOIN version_group vg ON vg.id = f.version_group_id " +
+            "WHERE f.ability_id IN (:ids) AND f.lang IN ('zh-Hans', 'zh-Hant', 'en')"
+
+    const val ABILITY_SPECIES =
+        "SELECT DISTINCT p.species_id FROM pokemon_ability pa JOIN pokemon p ON p.id = pa.pokemon_id " +
+            "WHERE pa.ability_id = :abilityId ORDER BY p.species_id"
+
+    const val MOVE_DETAIL =
+        "SELECT id, type_id AS typeId, damage_class_id AS damageClassId, power, accuracy, pp FROM move WHERE id = :moveId"
+
+    const val MOVE_FLAVOR =
+        "SELECT f.move_id AS entityId, f.lang AS lang, f.text AS text, vg.sort_order AS sortOrder " +
+            "FROM move_flavor_text f JOIN version_group vg ON vg.id = f.version_group_id " +
+            "WHERE f.move_id = :moveId AND f.lang IN ('zh-Hans', 'zh-Hant', 'en')"
+
+    // Uses index_pokemon_move_move_id_version_group_id.
+    const val MOVE_SPECIES =
+        "SELECT DISTINCT p.species_id FROM pokemon_move pm JOIN pokemon p ON p.id = pm.pokemon_id " +
+            "WHERE pm.move_id = :moveId ORDER BY p.species_id"
+
+    const val POKEMON_MOVES =
+        "SELECT pm.version_group_id AS versionGroupId, pm.move_id AS moveId, mm.identifier AS methodIdentifier, " +
+            "pm.level AS level, pm.sort_order AS sortOrder, m.type_id AS typeId, " +
+            "m.damage_class_id AS damageClassId, m.power AS power " +
+            "FROM pokemon_move pm JOIN move m ON m.id = pm.move_id JOIN move_method mm ON mm.id = pm.method_id " +
+            "WHERE pm.pokemon_id = :pokemonId"
+
+    const val VERSION_GROUP_VERSIONS =
+        "SELECT vg.id AS versionGroupId, vg.identifier AS identifier, vg.sort_order AS sortOrder, v.id AS versionId " +
+            "FROM version_group vg JOIN version v ON v.version_group_id = vg.id ORDER BY vg.sort_order, v.id"
 }

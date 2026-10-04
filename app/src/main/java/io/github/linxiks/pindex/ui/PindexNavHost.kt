@@ -29,7 +29,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.linxiks.pindex.R
+import io.github.linxiks.pindex.ui.ability.AbilityDetailScreen
+import io.github.linxiks.pindex.ui.ability.AbilityDetailViewModel
 import io.github.linxiks.pindex.ui.favorites.FavoritesScreen
+import io.github.linxiks.pindex.ui.move.MoveDetailScreen
+import io.github.linxiks.pindex.ui.move.MoveDetailViewModel
 import io.github.linxiks.pindex.ui.pokedex.PokedexScreen
 import io.github.linxiks.pindex.ui.pokemon.PokemonDetailScreen
 import io.github.linxiks.pindex.ui.pokemon.PokemonDetailViewModel
@@ -44,8 +48,12 @@ private enum class TopLevel(val route: String, @StringRes val label: Int, val ic
 }
 
 private const val ROUTE_POKEMON = "pokemon/{${PokemonDetailViewModel.ARG_POKEMON_ID}}"
+private const val ROUTE_ABILITY = "ability/{${AbilityDetailViewModel.ARG_ABILITY_ID}}"
+private const val ROUTE_MOVE = "move/{${MoveDetailViewModel.ARG_MOVE_ID}}"
 
 private fun pokemonRoute(pokemonId: Int) = "pokemon/$pokemonId"
+private fun abilityRoute(abilityId: Int) = "ability/$abilityId"
+private fun moveRoute(moveId: Int) = "move/$moveId"
 
 /** Tab switch that keeps each tab's back stack, ViewModels and scroll state. */
 private fun NavHostController.navigateTopLevel(route: String) {
@@ -87,7 +95,10 @@ fun PindexNavHost() {
             // Consume so screens' own statusBarsPadding/TopAppBar insets do not double up.
             modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding),
         ) {
+            // Every open pushes, so pokemon → move → pokemon unwinds one level per back.
             val openPokemon: (Int) -> Unit = { navController.navigate(pokemonRoute(it)) }
+            val openAbility: (Int) -> Unit = { navController.navigate(abilityRoute(it)) }
+            val openMove: (Int) -> Unit = { navController.navigate(moveRoute(it)) }
             composable(TopLevel.Pokedex.route) {
                 PokedexScreen(
                     onOpenSearch = { navController.navigateTopLevel(TopLevel.Search.route) },
@@ -103,7 +114,24 @@ fun PindexNavHost() {
                 route = ROUTE_POKEMON,
                 arguments = listOf(navArgument(PokemonDetailViewModel.ARG_POKEMON_ID) { type = NavType.IntType }),
             ) {
-                PokemonDetailScreen(onBack = { navController.navigateUp() }, onOpenPokemon = openPokemon)
+                PokemonDetailScreen(
+                    onBack = { navController.navigateUp() },
+                    onOpenPokemon = openPokemon,
+                    onOpenAbility = openAbility,
+                    onOpenMove = openMove,
+                )
+            }
+            composable(
+                route = ROUTE_ABILITY,
+                arguments = listOf(navArgument(AbilityDetailViewModel.ARG_ABILITY_ID) { type = NavType.IntType }),
+            ) {
+                AbilityDetailScreen(onBack = { navController.navigateUp() }, onOpenPokemon = openPokemon)
+            }
+            composable(
+                route = ROUTE_MOVE,
+                arguments = listOf(navArgument(MoveDetailViewModel.ARG_MOVE_ID) { type = NavType.IntType }),
+            ) {
+                MoveDetailScreen(onBack = { navController.navigateUp() }, onOpenPokemon = openPokemon)
             }
         }
     }

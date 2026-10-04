@@ -2,22 +2,32 @@ package io.github.linxiks.pindex.data.repository
 
 import io.github.linxiks.pindex.data.local.ChainSpeciesRow
 import io.github.linxiks.pindex.data.local.EvolutionRow
+import io.github.linxiks.pindex.data.local.FlavorRow
 import io.github.linxiks.pindex.data.local.NameRow
 import io.github.linxiks.pindex.data.local.PokemonDao
+import io.github.linxiks.pindex.data.model.AbilityDetail
+import io.github.linxiks.pindex.data.model.AbilitySlot
 import io.github.linxiks.pindex.data.model.DamageGroup
 import io.github.linxiks.pindex.data.model.EvolutionNode
 import io.github.linxiks.pindex.data.model.FormLink
 import io.github.linxiks.pindex.data.model.Generation
+import io.github.linxiks.pindex.data.model.LearnedMove
+import io.github.linxiks.pindex.data.model.Learnset
+import io.github.linxiks.pindex.data.model.MoveDetail
 import io.github.linxiks.pindex.data.model.PokemonDetail
 import io.github.linxiks.pindex.data.model.PokemonListItem
 import io.github.linxiks.pindex.data.model.StatValue
 import io.github.linxiks.pindex.data.model.TypeInfo
+import io.github.linxiks.pindex.data.model.VersionGroupOption
 import io.github.linxiks.pindex.domain.EVOLUTION_NAME_REFS
+import io.github.linxiks.pindex.domain.FALLBACK_LANGS
 import io.github.linxiks.pindex.domain.LocalizedText
 import io.github.linxiks.pindex.domain.damageTaken
 import io.github.linxiks.pindex.domain.describeEvolution
 import io.github.linxiks.pindex.domain.formatNumber
 import io.github.linxiks.pindex.domain.groupDamage
+import io.github.linxiks.pindex.domain.moveMethodGroup
+import io.github.linxiks.pindex.domain.normalizeFlavorText
 import io.github.linxiks.pindex.domain.parseRawConditions
 import io.github.linxiks.pindex.domain.resolveLocalized
 import kotlinx.coroutines.sync.Mutex
@@ -98,6 +108,19 @@ class PokemonRepository(private val dao: PokemonDao) {
         val formNames = dao.namesOfIds("pokemon_form", forms.mapNotNull { it.formId }).namesById()
         fun formName(formId: Int?) = formId?.let { formNames[it] }
 
+        val abilityRows = dao.pokemonAbilities(pokemonId)
+        val abilityIds = abilityRows.map { it.abilityId }
+        val abilityNames = dao.namesOfIds("ability", abilityIds).namesById()
+        val abilityEffects = dao.abilityFlavor(abilityIds).latestByEntity()
+        val abilities = abilityRows.map { a ->
+            AbilitySlot(
+                abilityId = a.abilityId,
+                name = abilityNames[a.abilityId] ?: LocalizedText(a.abilityId.toString(), "und"),
+                effect = abilityEffects[a.abilityId],
+                isHidden = a.isHidden,
+            )
+        }
+
         val name = resolveLocalized(speciesByLang) ?: LocalizedText(formatNumber(speciesId), "und")
         return PokemonDetail(
             pokemonId = pokemonId,
@@ -123,6 +146,8 @@ class PokemonRepository(private val dao: PokemonDao) {
             stats = stats,
             damageTaken = damage,
             evolution = evolution(row.evolutionChainId),
+            abilities = abilities,
+            learnset = learnset(pokemonId),
             otherForms = forms.filter { it.pokemonId != pokemonId }
                 .map { FormLink(it.pokemonId, formName(it.formId), it.identifier) },
         )
@@ -157,6 +182,92 @@ class PokemonRepository(private val dao: PokemonDao) {
         return children[null].orEmpty().map { node(it) }
     }
 
+    /**
+     * Every way [pokemonId] learns moves, across all version groups. Default group: newest one
+     * with level-up moves (the newest overall can be a special-method-only group such as champions).
+     */
+    suspend fun learnset(pokemonId: Int): Learnset {
+        val rows = dao.pokemonMoves(pokemonId)
+        if (rows.isEmpty()) return Learnset(emptyList(), null, emptyList())
+
+        val moveNames = dao.namesOfIds("move", rows.map { it.moveId }.distinct()).namesById()
+        val types = typeInfos()
+        val damageClasses = dao.namesOfEntity("move_damage_class").namesById()
+
+        val usedGroups = rows.mapTo(HashSet()) { it.versionGroupId }
+        val versionRows = dao.versionGroupVersions().filter { it.versionGroupId in usedGroups }
+        val versionNames = dao.namesOfIds("version", versionRows.map { it.versionId }).namesById()
+        val versionGroups = versionRows.groupBy { it.versionGroupId }.values
+            .sortedByDescending { it.first().sortOrder }
+            .map { g ->
+                VersionGroupOption(g.first().versionGroupId, g.first().identifier, g.mapNotNull { versionNames[it.versionId] })
+            }
+
+        val levelUpGroups = rows.filter { it.methodIdentifier == "level-up" }.mapTo(HashSet()) { it.versionGroupId }
+        val defaultGroup = versionGroups.firstOrNull { it.id in levelUpGroups } ?: versionGroups.firstOrNull()
+
+        val moves = rows.map { r ->
+            val learned = LearnedMove(
+                moveId = r.moveId,
+                versionGroupId = r.versionGroupId,
+                group = moveMethodGroup(r.methodIdentifier),
+                level = r.level,
+                name = moveNames[r.moveId] ?: LocalizedText(r.moveId.toString(), "und"),
+                type = types.getValue(r.typeId),
+                damageClass = damageClasses[r.damageClassId] ?: LocalizedText(r.damageClassId.toString(), "und"),
+                power = r.power,
+            )
+            learned to (r.sortOrder ?: Int.MAX_VALUE)
+        }
+            // Other merges several methods: one move can appear twice at the same level in a group.
+            .distinctBy { (m, _) -> listOf(m.versionGroupId, m.group.ordinal, m.moveId, m.level) }
+            .sortedWith(
+                compareBy<Pair<LearnedMove, Int>>({ it.first.group.ordinal }, { it.first.level }, { it.second }, { it.first.moveId }),
+            )
+            .map { it.first }
+        return Learnset(versionGroups, defaultGroup?.id, moves)
+    }
+
+    suspend fun ability(abilityId: Int): AbilityDetail? {
+        val identifier = dao.abilityIdentifier(abilityId) ?: return null
+        val nameRows = dao.namesOfIds("ability", listOf(abilityId))
+        val byLang = nameRows.associate { it.lang to it.name }
+        val name = resolveLocalized(byLang) ?: LocalizedText(identifier, "und")
+        return AbilityDetail(
+            abilityId = abilityId,
+            name = name,
+            enName = byLang["en"].takeIf { name.lang != "en" },
+            effect = dao.abilityFlavor(listOf(abilityId)).latestByEntity()[abilityId],
+            holders = bySpecies(dao.abilitySpecies(abilityId)),
+        )
+    }
+
+    suspend fun move(moveId: Int): MoveDetail? {
+        val row = dao.move(moveId) ?: return null
+        val byLang = dao.namesOfIds("move", listOf(moveId)).associate { it.lang to it.name }
+        val name = resolveLocalized(byLang) ?: LocalizedText(moveId.toString(), "und")
+        val damageClass = dao.namesOfIds("move_damage_class", listOf(row.damageClassId)).namesById()[row.damageClassId]
+            ?: LocalizedText(row.damageClassId.toString(), "und")
+        return MoveDetail(
+            moveId = moveId,
+            name = name,
+            enName = byLang["en"].takeIf { name.lang != "en" },
+            type = typeInfos().getValue(row.typeId),
+            damageClass = damageClass,
+            power = row.power,
+            accuracy = row.accuracy,
+            pp = row.pp,
+            description = dao.moveFlavor(moveId).latestByEntity()[moveId],
+            learners = bySpecies(dao.moveSpecies(moveId)),
+        )
+    }
+
+    /** Default pokemon of each species from the list cache, in [speciesIds] order. */
+    private suspend fun bySpecies(speciesIds: List<Int>): List<PokemonListItem> {
+        val bySpecies = list().associateBy { it.speciesId }
+        return speciesIds.mapNotNull { bySpecies[it] }
+    }
+
     private suspend fun typeInfos(): Map<Int, TypeInfo> {
         val names = dao.namesOfEntity("type").namesById()
         return dao.types().associate { t ->
@@ -180,4 +291,11 @@ private fun pickEvolution(rows: List<EvolutionRow>): EvolutionRow =
 private fun List<NameRow>.namesById(): Map<Int, LocalizedText> =
     groupBy { it.entityId }.mapNotNull { (id, rows) ->
         resolveLocalized(rows.associate { it.lang to it.name })?.let { id to it }
+    }.toMap()
+
+/** Per entity: newest flavor text in the first [FALLBACK_LANGS] language that has any, normalized. */
+private fun List<FlavorRow>.latestByEntity(): Map<Int, LocalizedText> =
+    groupBy { it.entityId }.mapNotNull { (id, rows) ->
+        FALLBACK_LANGS.firstNotNullOfOrNull { lang -> rows.filter { it.lang == lang }.maxByOrNull { it.sortOrder } }
+            ?.let { id to LocalizedText(normalizeFlavorText(it.text, it.lang), it.lang) }
     }.toMap()

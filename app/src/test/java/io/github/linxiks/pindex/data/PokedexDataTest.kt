@@ -4,6 +4,7 @@ import io.github.linxiks.pindex.data.model.EvolutionNode
 import io.github.linxiks.pindex.data.repository.MetaRepository
 import io.github.linxiks.pindex.data.repository.PokemonRepository
 import io.github.linxiks.pindex.domain.LocalizedText
+import io.github.linxiks.pindex.domain.MoveMethodGroup
 import io.github.linxiks.pindex.domain.filterByGeneration
 import io.github.linxiks.pindex.testutil.JdbcMetaDao
 import io.github.linxiks.pindex.testutil.JdbcPokemonDao
@@ -22,9 +23,9 @@ class PokedexDataTest {
     @Test
     fun metaAndUserVersionMatchSchemaVersion() = runTest {
         val meta = JdbcMetaDao().all().associate { it.key to it.value }
-        assertEquals("2", meta["schema_version"])
+        assertEquals("3", meta["schema_version"])
         assertEquals("1", meta["data_version"])
-        assertEquals(2, PokedexJdbc.userVersion())
+        assertEquals(3, PokedexJdbc.userVersion())
         val version = MetaRepository(JdbcMetaDao()).dataVersion()
         assertEquals("1", version.dataVersion)
         assertTrue(version.buildDate.isNotBlank())
@@ -177,5 +178,81 @@ class PokedexDataTest {
         assertEquals(484, evolved.size)
         val bad = evolved.filter { val c = it.condition; c == null || '#' in c || c == "特殊条件" }
         assertEquals(emptyList<EvolutionNode>(), bad)
+    }
+
+    @Test
+    fun pikachuAbilities() = runTest {
+        val abilities = checkNotNull(pokemon.detail(25)).abilities
+        assertEquals(
+            listOf(Triple(9, "静电", false), Triple(31, "避雷针", true)),
+            abilities.map { Triple(it.abilityId, it.name.text, it.isHidden) },
+        )
+        assertEquals(LocalizedText("身上带有静电，有时会让接触到的对手麻痹。", "zh-Hans"), abilities.first().effect)
+    }
+
+    @Test
+    fun garchompHiddenAbility() = runTest {
+        val abilities = checkNotNull(pokemon.detail(445)).abilities
+        assertEquals(listOf(8 to false, 24 to true), abilities.map { it.abilityId to it.isHidden })
+    }
+
+    @Test
+    fun intimidateDetail() = runTest {
+        val a = checkNotNull(pokemon.ability(22))
+        assertEquals(LocalizedText("威吓", "zh-Hans"), a.name)
+        assertEquals("Intimidate", a.enName)
+        assertEquals("出场时威吓对手，让其退缩，降低对手的攻击。", a.effect?.text)
+        val species = a.holders.map { it.speciesId }
+        assertEquals(37, species.size)
+        assertEquals(species.sorted(), species)
+        assertTrue(130 in species && 310 in species)
+    }
+
+    @Test
+    fun abilityEdgeCases() = runTest {
+        val eelevate = checkNotNull(pokemon.ability(312))
+        assertEquals("en", eelevate.name.lang)
+        assertNull(eelevate.enName)
+        assertEquals("en", eelevate.effect?.lang)
+        assertTrue(checkNotNull(pokemon.ability(303)).holders.isEmpty())
+        assertNull(pokemon.ability(99999))
+    }
+
+    @Test
+    fun pikachuLearnsetScarletViolet() = runTest {
+        val learnset = checkNotNull(pokemon.detail(25)).learnset
+        assertEquals(32, learnset.versionGroups.first().id)
+        assertEquals(25, learnset.defaultVersionGroupId)
+        assertEquals(listOf("朱", "紫"), learnset.versionGroups.single { it.id == 25 }.versions.map { it.text })
+        val sv = learnset.moves.filter { it.versionGroupId == 25 }
+        val levelUp = sv.filter { it.group == MoveMethodGroup.LevelUp }
+        assertEquals(
+            listOf(609, 417, 204, 186, 589, 98, 39, 84, 45, 86, 104, 486, 364, 209, 97, 231, 435, 85, 113, 87),
+            levelUp.map { it.moveId },
+        )
+        assertEquals(List(9) { 1 } + listOf(4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44), levelUp.map { it.level })
+        assertEquals(47, sv.count { it.group == MoveMethodGroup.Machine })
+    }
+
+    @Test
+    fun gmaxHasNoLearnset() = runTest {
+        val learnset = checkNotNull(pokemon.detail(10195)).learnset
+        assertTrue(learnset.moves.isEmpty())
+        assertNull(learnset.defaultVersionGroupId)
+    }
+
+    @Test
+    fun thunderboltDetail() = runTest {
+        val m = checkNotNull(pokemon.move(85))
+        assertEquals(LocalizedText("十万伏特", "zh-Hans"), m.name)
+        assertEquals("Thunderbolt", m.enName)
+        assertEquals("electric", m.type.identifier)
+        assertEquals("特殊", m.damageClass.text)
+        assertEquals(listOf(90, 100, 15), listOf(m.power, m.accuracy, m.pp))
+        assertEquals(LocalizedText("向对手发出强力电击进行攻击。有时会让对手陷入麻痹状态。", "zh-Hans"), m.description)
+        assertEquals(260, m.learners.size)
+        assertTrue(m.learners.any { it.speciesId == 25 })
+        assertTrue(checkNotNull(pokemon.move(165)).learners.isEmpty())
+        assertNull(pokemon.move(99999))
     }
 }

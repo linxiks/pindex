@@ -46,3 +46,22 @@ data class EvolutionRow(
     val triggerIdentifier: String,
     val rawConditions: String,
 )
+
+data class PokemonAbilityRow(val slot: Int, val abilityId: Int, val isHidden: Boolean)
+
+data class FlavorRow(val entityId: Int, val lang: String, val text: String, val sortOrder: Int)
+
+data class MoveRow(val id: Int, val typeId: Int, val damageClassId: Int, val power: Int?, val accuracy: Int?, val pp: Int)
+
+data class LearnRow(
+    val versionGroupId: Int,
+    val moveId: Int,
+    val methodIdentifier: String,
+    val level: Int,
+    val sortOrder: Int?,
+    val typeId: Int,
+    val damageClassId: Int,
+    val power: Int?,
+)
+
+data class VersionRow(val versionGroupId: Int, val identifier: String, val sortOrder: Int, val versionId: Int)
