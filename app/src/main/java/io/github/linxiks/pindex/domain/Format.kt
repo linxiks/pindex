@@ -21,6 +21,17 @@ fun formatGender(rate: Int): String = when (rate) {
 private fun pct(value: Double): String =
     if (value % 1.0 == 0.0) "${value.toInt()}%" else "$value%"
 
+/** Damage percent (see TypeEffectiveness.kt) as a multiplier label. */
+fun formatMultiplier(percent: Int): String = when (percent) {
+    400 -> "4×"
+    200 -> "2×"
+    100 -> "1×"
+    50 -> "½×"
+    25 -> "¼×"
+    0 -> "0×"
+    else -> throw IllegalArgumentException("unexpected multiplier $percent")
+}
+
 private const val ROMAN_SINGLE = "ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ"
 
 /** Unicode upper-case Roman numerals for 1..39: Ⅰ..Ⅻ as single characters, then Ⅹ repeated plus the ones digit. */

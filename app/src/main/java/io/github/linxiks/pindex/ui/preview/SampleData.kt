@@ -1,6 +1,8 @@
 package io.github.linxiks.pindex.ui.preview
 
 import io.github.linxiks.pindex.data.model.Generation
+import io.github.linxiks.pindex.data.model.DamageGroup
+import io.github.linxiks.pindex.data.model.EvolutionNode
 import io.github.linxiks.pindex.data.model.FormLink
 import io.github.linxiks.pindex.data.model.PokemonDetail
 import io.github.linxiks.pindex.data.model.PokemonListItem
@@ -20,6 +22,7 @@ object SampleData {
     private val normal = TypeInfo(1, "normal", zh("一般"))
     private val dragon = TypeInfo(16, "dragon", zh("龙"))
     private val ground = TypeInfo(5, "ground", zh("地面"))
+    private val steel = TypeInfo(9, "steel", zh("钢"))
 
     val pokemon: List<PokemonListItem> = listOf(
         PokemonListItem(1, 1, 1, zh("妙蛙种子"), listOf(grass, poison)),
@@ -63,6 +66,24 @@ object SampleData {
             StatValue(4, zh("特攻"), 50),
             StatValue(5, zh("特防"), 50),
             StatValue(6, zh("速度"), 90),
+        ),
+        damageTaken = listOf(
+            DamageGroup(400, emptyList()),
+            DamageGroup(200, listOf(ground)),
+            DamageGroup(50, listOf(flying, steel, electric)),
+            DamageGroup(25, emptyList()),
+            DamageGroup(0, emptyList()),
+        ),
+        evolution = listOf(
+            EvolutionNode(
+                172, 172, zh("皮丘"), null,
+                listOf(
+                    EvolutionNode(
+                        25, 25, zh("皮卡丘"), "升级，亲密度 ≥ 220",
+                        listOf(EvolutionNode(26, 26, zh("雷丘"), "使用雷之石", emptyList())),
+                    ),
+                ),
+            ),
         ),
         otherForms = listOf(
             FormLink(10080, LocalizedText("Pikachu Rock Star", "en"), "pikachu-rock-star"),

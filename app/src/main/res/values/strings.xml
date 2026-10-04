@@ -46,6 +46,10 @@
     <string name="section_basic_info">基本信息</string>
     <string name="section_stats">种族值</string>
     <string name="section_other_forms">其他形态</string>
+    <string name="section_type_defense">属性克制</string>
+    <string name="type_defense_caption">受到的伤害</string>
+    <string name="section_evolution">进化</string>
+    <string name="evolution_none">不进化</string>
     <string name="info_genus">分类</string>
     <string name="info_ja_name">日文名</string>
     <string name="info_height">身高</string>

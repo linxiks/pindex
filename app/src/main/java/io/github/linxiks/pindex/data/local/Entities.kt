@@ -187,3 +187,120 @@ data class SearchIndexEntity(
     @ColumnInfo(name = "display") val display: String,
     @ColumnInfo(name = "priority") val priority: Int,
 )
+
+@Entity(
+    tableName = "version_group",
+    foreignKeys = [
+        ForeignKey(entity = GenerationEntity::class, parentColumns = ["id"], childColumns = ["generation_id"]),
+    ],
+)
+data class VersionGroupEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "generation_id") val generationId: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+    @ColumnInfo(name = "sort_order") val sortOrder: Int,
+)
+
+@Entity(
+    tableName = "type_efficacy",
+    primaryKeys = ["attack_type_id", "defend_type_id"],
+    foreignKeys = [
+        ForeignKey(entity = TypeEntity::class, parentColumns = ["id"], childColumns = ["attack_type_id"]),
+        ForeignKey(entity = TypeEntity::class, parentColumns = ["id"], childColumns = ["defend_type_id"]),
+    ],
+)
+data class TypeEfficacyEntity(
+    @ColumnInfo(name = "attack_type_id") val attackTypeId: Int,
+    @ColumnInfo(name = "defend_type_id") val defendTypeId: Int,
+    @ColumnInfo(name = "factor") val factor: Int,
+)
+
+@Entity(tableName = "move_damage_class")
+data class MoveDamageClassEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+)
+
+@Entity(
+    tableName = "move",
+    foreignKeys = [
+        ForeignKey(entity = TypeEntity::class, parentColumns = ["id"], childColumns = ["type_id"]),
+        ForeignKey(entity = MoveDamageClassEntity::class, parentColumns = ["id"], childColumns = ["damage_class_id"]),
+        ForeignKey(entity = GenerationEntity::class, parentColumns = ["id"], childColumns = ["generation_id"]),
+    ],
+)
+data class MoveEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+    @ColumnInfo(name = "type_id") val typeId: Int,
+    @ColumnInfo(name = "damage_class_id") val damageClassId: Int,
+    @ColumnInfo(name = "power") val power: Int?,
+    @ColumnInfo(name = "accuracy") val accuracy: Int?,
+    @ColumnInfo(name = "pp") val pp: Int,
+    @ColumnInfo(name = "priority") val priority: Int,
+    @ColumnInfo(name = "generation_id") val generationId: Int,
+)
+
+@Entity(tableName = "evolution_trigger")
+data class EvolutionTriggerEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+)
+
+@Entity(tableName = "region")
+data class RegionEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "identifier") val identifier: String,
+)
+
+@Entity(
+    tableName = "location",
+    foreignKeys = [
+        ForeignKey(entity = RegionEntity::class, parentColumns = ["id"], childColumns = ["region_id"]),
+    ],
+)
+data class LocationEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "region_id") val regionId: Int?,
+    @ColumnInfo(name = "identifier") val identifier: String,
+)
+
+@Entity(
+    tableName = "evolution",
+    foreignKeys = [
+        ForeignKey(entity = PokemonSpeciesEntity::class, parentColumns = ["id"], childColumns = ["evolved_species_id"]),
+        ForeignKey(entity = PokemonFormEntity::class, parentColumns = ["id"], childColumns = ["evolved_pokemon_form_id"]),
+        ForeignKey(entity = VersionGroupEntity::class, parentColumns = ["id"], childColumns = ["version_group_id"]),
+        ForeignKey(entity = EvolutionTriggerEntity::class, parentColumns = ["id"], childColumns = ["trigger_id"]),
+        ForeignKey(entity = ItemEntity::class, parentColumns = ["id"], childColumns = ["trigger_item_id"]),
+        ForeignKey(entity = ItemEntity::class, parentColumns = ["id"], childColumns = ["held_item_id"]),
+        ForeignKey(entity = MoveEntity::class, parentColumns = ["id"], childColumns = ["known_move_id"]),
+        ForeignKey(entity = TypeEntity::class, parentColumns = ["id"], childColumns = ["known_move_type_id"]),
+        ForeignKey(entity = LocationEntity::class, parentColumns = ["id"], childColumns = ["location_id"]),
+        ForeignKey(entity = RegionEntity::class, parentColumns = ["id"], childColumns = ["region_id"]),
+        ForeignKey(entity = PokemonSpeciesEntity::class, parentColumns = ["id"], childColumns = ["trade_species_id"]),
+    ],
+    indices = [Index("evolved_species_id")],
+)
+data class EvolutionEntity(
+    @PrimaryKey @ColumnInfo(name = "id") val id: Int,
+    @ColumnInfo(name = "evolved_species_id") val evolvedSpeciesId: Int,
+    @ColumnInfo(name = "evolved_pokemon_form_id") val evolvedPokemonFormId: Int?,
+    @ColumnInfo(name = "version_group_id") val versionGroupId: Int,
+    @ColumnInfo(name = "is_default") val isDefault: Boolean,
+    @ColumnInfo(name = "trigger_id") val triggerId: Int,
+    @ColumnInfo(name = "min_level") val minLevel: Int?,
+    @ColumnInfo(name = "trigger_item_id") val triggerItemId: Int?,
+    @ColumnInfo(name = "held_item_id") val heldItemId: Int?,
+    @ColumnInfo(name = "known_move_id") val knownMoveId: Int?,
+    @ColumnInfo(name = "known_move_type_id") val knownMoveTypeId: Int?,
+    @ColumnInfo(name = "gender_id") val genderId: Int?,
+    @ColumnInfo(name = "time_of_day") val timeOfDay: String?,
+    @ColumnInfo(name = "min_happiness") val minHappiness: Int?,
+    @ColumnInfo(name = "min_affection") val minAffection: Int?,
+    @ColumnInfo(name = "min_beauty") val minBeauty: Int?,
+    @ColumnInfo(name = "location_id") val locationId: Int?,
+    @ColumnInfo(name = "region_id") val regionId: Int?,
+    @ColumnInfo(name = "trade_species_id") val tradeSpeciesId: Int?,
+    @ColumnInfo(name = "raw_conditions") val rawConditions: String,
+)

@@ -1,5 +1,7 @@
 package io.github.linxiks.pindex.testutil
 
+import io.github.linxiks.pindex.data.local.ChainSpeciesRow
+import io.github.linxiks.pindex.data.local.EvolutionRow
 import io.github.linxiks.pindex.data.local.FormRow
 import io.github.linxiks.pindex.data.local.MetaDao
 import io.github.linxiks.pindex.data.local.MetaEntity
@@ -13,6 +15,7 @@ import io.github.linxiks.pindex.data.local.SearchDao
 import io.github.linxiks.pindex.data.local.SearchIdRow
 import io.github.linxiks.pindex.data.local.SearchRow
 import io.github.linxiks.pindex.data.local.StatRow
+import io.github.linxiks.pindex.data.local.TypeEfficacyRow
 import io.github.linxiks.pindex.data.local.TypeRow
 import java.sql.ResultSet
 
@@ -69,6 +72,7 @@ class JdbcPokemonDao : PokemonDao {
                 baseHappiness = it.getInt("baseHappiness"),
                 hatchCounter = it.getInt("hatchCounter"),
                 growthRateId = it.getInt("growthRateId"),
+                evolutionChainId = it.getInt("evolutionChainId"),
             )
         }.singleOrNull()
 
@@ -90,6 +94,27 @@ class JdbcPokemonDao : PokemonDao {
 
     override suspend fun growthRateIdentifier(id: Int) =
         PokedexJdbc.query(Queries.GROWTH_RATE_IDENTIFIER, mapOf("id" to id)) { it.getString(1) }.singleOrNull()
+
+    override suspend fun typeEfficacy() = PokedexJdbc.query(Queries.TYPE_EFFICACY) {
+        TypeEfficacyRow(it.getInt("attackTypeId"), it.getInt("defendTypeId"), it.getInt("factor"))
+    }
+
+    override suspend fun chainSpecies(chainId: Int) =
+        PokedexJdbc.query(Queries.CHAIN_SPECIES, mapOf("chainId" to chainId)) {
+            ChainSpeciesRow(it.getInt("speciesId"), it.getIntOrNull("evolvesFromSpeciesId"), it.getInt("pokemonId"))
+        }
+
+    override suspend fun chainEvolutions(chainId: Int) =
+        PokedexJdbc.query(Queries.CHAIN_EVOLUTIONS, mapOf("chainId" to chainId)) {
+            EvolutionRow(
+                id = it.getInt("id"),
+                evolvedSpeciesId = it.getInt("evolvedSpeciesId"),
+                isDefault = it.getBool("isDefault"),
+                evolvedFormId = it.getIntOrNull("evolvedFormId"),
+                triggerIdentifier = it.getString("triggerIdentifier"),
+                rawConditions = it.getString("rawConditions"),
+            )
+        }
 }
 
 class JdbcSearchDao : SearchDao {

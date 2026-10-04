@@ -46,6 +46,15 @@ interface PokemonDao {
 
     @Query(Queries.GROWTH_RATE_IDENTIFIER)
     suspend fun growthRateIdentifier(id: Int): String?
+
+    @Query(Queries.TYPE_EFFICACY)
+    suspend fun typeEfficacy(): List<TypeEfficacyRow>
+
+    @Query(Queries.CHAIN_SPECIES)
+    suspend fun chainSpecies(chainId: Int): List<ChainSpeciesRow>
+
+    @Query(Queries.CHAIN_EVOLUTIONS)
+    suspend fun chainEvolutions(chainId: Int): List<EvolutionRow>
 }
 
 @Dao

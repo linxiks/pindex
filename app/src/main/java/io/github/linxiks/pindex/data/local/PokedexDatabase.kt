@@ -22,8 +22,16 @@ import androidx.room.RoomDatabase
         SpeciesEggGroupEntity::class,
         LocalizedNameEntity::class,
         SearchIndexEntity::class,
+        VersionGroupEntity::class,
+        TypeEfficacyEntity::class,
+        MoveDamageClassEntity::class,
+        MoveEntity::class,
+        EvolutionTriggerEntity::class,
+        RegionEntity::class,
+        LocationEntity::class,
+        EvolutionEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class PokedexDatabase : RoomDatabase() {

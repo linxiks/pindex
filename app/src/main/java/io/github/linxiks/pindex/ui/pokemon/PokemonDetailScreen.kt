@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.linxiks.pindex.R
+import io.github.linxiks.pindex.core.components.DamageMultiplierGroup
 import io.github.linxiks.pindex.core.components.EmptyState
 import io.github.linxiks.pindex.core.components.InfoGrid
 import io.github.linxiks.pindex.core.components.LocalizedLabel
@@ -52,6 +53,7 @@ import io.github.linxiks.pindex.core.theme.Spacing
 import io.github.linxiks.pindex.data.model.PokemonDetail
 import io.github.linxiks.pindex.domain.formatGender
 import io.github.linxiks.pindex.domain.formatHeight
+import io.github.linxiks.pindex.domain.formatMultiplier
 import io.github.linxiks.pindex.domain.formatNumber
 import io.github.linxiks.pindex.domain.formatWeight
 import io.github.linxiks.pindex.ui.preview.SampleData
@@ -129,6 +131,23 @@ private fun DetailBody(detail: PokemonDetail, onOpenPokemon: (Int) -> Unit, modi
                 SectionHeader(stringResource(R.string.section_stats))
                 detail.stats.forEach { StatBar(label = it.label.text, value = it.value) }
                 StatTotalRow(label = stringResource(R.string.stat_total), value = detail.stats.sumOf { it.value })
+            }
+        }
+        item(key = "typeDefense") {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                SectionHeader(stringResource(R.string.section_type_defense))
+                Text(
+                    text = stringResource(R.string.type_defense_caption),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                detail.damageTaken.forEach { DamageMultiplierGroup(formatMultiplier(it.percent), it.types) }
+            }
+        }
+        item(key = "evolution") {
+            Column {
+                SectionHeader(stringResource(R.string.section_evolution))
+                EvolutionSection(detail.evolution, detail.speciesId, onOpenPokemon)
             }
         }
         if (detail.otherForms.isNotEmpty()) {

@@ -43,8 +43,23 @@ data class PokemonDetail(
     val growthRateEnName: String?,
     val generation: LocalizedText?,
     val stats: List<StatValue>,
+    /** Always one group per DAMAGE_GROUPS value, in that order. */
+    val damageTaken: List<DamageGroup>,
+    /** Roots of the species' evolution chain; usually one. */
+    val evolution: List<EvolutionNode>,
     /** Other pokemon of the same species, excluding this one. */
     val otherForms: List<FormLink>,
+)
+
+data class DamageGroup(val percent: Int, val types: List<TypeInfo>)
+
+data class EvolutionNode(
+    val speciesId: Int,
+    val pokemonId: Int,
+    val name: LocalizedText,
+    /** How this node is reached from its parent; null for roots. */
+    val condition: String?,
+    val children: List<EvolutionNode>,
 )
 
 data class DataVersion(val dataVersion: String, val buildDate: String)

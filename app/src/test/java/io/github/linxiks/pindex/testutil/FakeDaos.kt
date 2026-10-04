@@ -1,5 +1,7 @@
 package io.github.linxiks.pindex.testutil
 
+import io.github.linxiks.pindex.data.local.ChainSpeciesRow
+import io.github.linxiks.pindex.data.local.EvolutionRow
 import io.github.linxiks.pindex.data.local.FormRow
 import io.github.linxiks.pindex.data.local.NameRow
 import io.github.linxiks.pindex.data.local.PokemonDao
@@ -11,6 +13,7 @@ import io.github.linxiks.pindex.data.local.SearchIdRow
 import io.github.linxiks.pindex.data.local.SearchRow
 import io.github.linxiks.pindex.data.local.StatRow
 import io.github.linxiks.pindex.data.local.TypeRow
+import io.github.linxiks.pindex.data.local.TypeEfficacyRow
 
 /** Three default pokemon: 1 and 25 in generation 1, 152 in generation 2. */
 class FakePokemonDao : PokemonDao {
@@ -50,6 +53,9 @@ class FakePokemonDao : PokemonDao {
     override suspend fun eggGroupIds(speciesId: Int) = emptyList<Int>()
     override suspend fun speciesForms(speciesId: Int) = emptyList<FormRow>()
     override suspend fun growthRateIdentifier(id: Int): String? = null
+    override suspend fun typeEfficacy() = emptyList<TypeEfficacyRow>()
+    override suspend fun chainSpecies(chainId: Int) = emptyList<ChainSpeciesRow>()
+    override suspend fun chainEvolutions(chainId: Int) = emptyList<EvolutionRow>()
 }
 
 /** Matches "皮卡丘" by prefix (皮, 皮卡, 皮卡丘) and by contains (卡, 丘); nothing else. */

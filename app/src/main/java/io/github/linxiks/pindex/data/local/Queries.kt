@@ -32,7 +32,8 @@ object Queries {
         "SELECT p.id AS pokemonId, p.species_id AS speciesId, p.height AS height, p.weight AS weight, " +
             "p.base_experience AS baseExperience, p.is_default AS isDefault, " +
             "s.generation_id AS generationId, s.gender_rate AS genderRate, s.capture_rate AS captureRate, " +
-            "s.base_happiness AS baseHappiness, s.hatch_counter AS hatchCounter, s.growth_rate_id AS growthRateId " +
+            "s.base_happiness AS baseHappiness, s.hatch_counter AS hatchCounter, s.growth_rate_id AS growthRateId, " +
+            "s.evolution_chain_id AS evolutionChainId " +
             "FROM pokemon p JOIN pokemon_species s ON s.id = p.species_id WHERE p.id = :pokemonId"
 
     const val POKEMON_TYPES =
@@ -53,6 +54,22 @@ object Queries {
             "FROM pokemon p WHERE p.species_id = :speciesId ORDER BY p.is_default DESC, p.id"
 
     const val GROWTH_RATE_IDENTIFIER = "SELECT identifier FROM growth_rate WHERE id = :id"
+
+    const val TYPE_EFFICACY =
+        "SELECT attack_type_id AS attackTypeId, defend_type_id AS defendTypeId, factor FROM type_efficacy"
+
+    const val CHAIN_SPECIES =
+        "SELECT s.id AS speciesId, s.evolves_from_species_id AS evolvesFromSpeciesId, p.id AS pokemonId " +
+            "FROM pokemon_species s JOIN pokemon p ON p.species_id = s.id AND p.is_default = 1 " +
+            "WHERE s.evolution_chain_id = :chainId ORDER BY s.id"
+
+    // Alias is triggerIdentifier, not trigger: TRIGGER is an SQLite keyword.
+    const val CHAIN_EVOLUTIONS =
+        "SELECT e.id AS id, e.evolved_species_id AS evolvedSpeciesId, e.is_default AS isDefault, " +
+            "e.evolved_pokemon_form_id AS evolvedFormId, t.identifier AS triggerIdentifier, " +
+            "e.raw_conditions AS rawConditions " +
+            "FROM evolution e JOIN evolution_trigger t ON t.id = e.trigger_id " +
+            "JOIN pokemon_species s ON s.id = e.evolved_species_id WHERE s.evolution_chain_id = :chainId"
 
     const val SEARCH_SPECIES_BY_ID =
         "SELECT DISTINCT entity_id AS entityId, display FROM search_index " +
