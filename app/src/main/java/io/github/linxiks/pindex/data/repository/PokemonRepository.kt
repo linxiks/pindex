@@ -7,6 +7,7 @@ import io.github.linxiks.pindex.data.local.NameRow
 import io.github.linxiks.pindex.data.local.PokemonDao
 import io.github.linxiks.pindex.data.model.AbilityDetail
 import io.github.linxiks.pindex.data.model.AbilitySlot
+import io.github.linxiks.pindex.data.model.AbilitySummary
 import io.github.linxiks.pindex.data.model.DamageGroup
 import io.github.linxiks.pindex.data.model.EvolutionNode
 import io.github.linxiks.pindex.data.model.FormLink
@@ -14,6 +15,7 @@ import io.github.linxiks.pindex.data.model.Generation
 import io.github.linxiks.pindex.data.model.LearnedMove
 import io.github.linxiks.pindex.data.model.Learnset
 import io.github.linxiks.pindex.data.model.MoveDetail
+import io.github.linxiks.pindex.data.model.MoveSummary
 import io.github.linxiks.pindex.data.model.PokemonDetail
 import io.github.linxiks.pindex.data.model.PokemonListItem
 import io.github.linxiks.pindex.data.model.StatValue
@@ -129,7 +131,6 @@ class PokemonRepository(private val dao: PokemonDao) {
             name = name,
             enName = speciesByLang["en"],
             jaName = speciesByLang["ja"] ?: speciesByLang["ja-Hrkt"],
-            formName = if (row.isDefault) null else formName(forms.firstOrNull { it.pokemonId == pokemonId }?.formId),
             genus = resolveLocalized(genusByLang),
             types = pokemonTypes,
             height = row.height,
@@ -148,8 +149,7 @@ class PokemonRepository(private val dao: PokemonDao) {
             evolution = evolution(row.evolutionChainId),
             abilities = abilities,
             learnset = learnset(pokemonId),
-            otherForms = forms.filter { it.pokemonId != pokemonId }
-                .map { FormLink(it.pokemonId, formName(it.formId), it.identifier) },
+            forms = forms.map { FormLink(it.pokemonId, formName(it.formId), it.identifier, it.isDefault) },
         )
     }
 
@@ -260,6 +260,33 @@ class PokemonRepository(private val dao: PokemonDao) {
             description = dao.moveFlavor(moveId).latestByEntity()[moveId],
             learners = bySpecies(dao.moveSpecies(moveId)),
         )
+    }
+
+    /** Search rows for [ids], in input order; ids missing from the database are skipped. */
+    suspend fun moveSummaries(ids: List<Int>): List<MoveSummary> {
+        if (ids.isEmpty()) return emptyList()
+        val rows = dao.moves(ids).associateBy { it.id }
+        val names = dao.namesOfIds("move", ids).namesById()
+        val types = typeInfos()
+        val damageClasses = dao.namesOfEntity("move_damage_class").namesById()
+        return ids.mapNotNull { id ->
+            val row = rows[id] ?: return@mapNotNull null
+            MoveSummary(
+                moveId = id,
+                name = names[id] ?: LocalizedText(id.toString(), "und"),
+                type = types.getValue(row.typeId),
+                damageClass = damageClasses[row.damageClassId] ?: LocalizedText(row.damageClassId.toString(), "und"),
+                power = row.power,
+            )
+        }
+    }
+
+    /** Search rows for [ids], in input order. */
+    suspend fun abilitySummaries(ids: List<Int>): List<AbilitySummary> {
+        if (ids.isEmpty()) return emptyList()
+        val names = dao.namesOfIds("ability", ids).namesById()
+        val effects = dao.abilityFlavor(ids).latestByEntity()
+        return ids.map { id -> AbilitySummary(id, names[id] ?: LocalizedText(id.toString(), "und"), effects[id]) }
     }
 
     /** Default pokemon of each species from the list cache, in [speciesIds] order. */

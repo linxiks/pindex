@@ -17,7 +17,7 @@ data class Generation(val id: Int, val name: LocalizedText)
 
 data class StatValue(val statId: Int, val label: LocalizedText, val value: Int)
 
-data class FormLink(val pokemonId: Int, val name: LocalizedText?, val identifier: String)
+data class FormLink(val pokemonId: Int, val name: LocalizedText?, val identifier: String, val isDefault: Boolean)
 
 data class PokemonDetail(
     val pokemonId: Int,
@@ -26,8 +26,6 @@ data class PokemonDetail(
     val name: LocalizedText,
     val enName: String?,
     val jaName: String?,
-    /** Form name of a non-default pokemon; null for the default one. */
-    val formName: LocalizedText?,
     val genus: LocalizedText?,
     val types: List<TypeInfo>,
     /** Decimetres. */
@@ -51,8 +49,8 @@ data class PokemonDetail(
     /** Sorted by slot; hidden ability last. */
     val abilities: List<AbilitySlot>,
     val learnset: Learnset,
-    /** Other pokemon of the same species, excluding this one. */
-    val otherForms: List<FormLink>,
+    /** Every pokemon of the species including this one, default first; size 1 when there is no other form. */
+    val forms: List<FormLink>,
 )
 
 data class DamageGroup(val percent: Int, val types: List<TypeInfo>)
@@ -113,5 +111,12 @@ data class MoveDetail(
     /** One card per species, linking to its default pokemon. */
     val learners: List<PokemonListItem>,
 )
+
+/** Search hits per category, best match first. */
+data class SearchHits(val species: List<Int>, val moves: List<Int>, val abilities: List<Int>)
+
+data class MoveSummary(val moveId: Int, val name: LocalizedText, val type: TypeInfo, val damageClass: LocalizedText, val power: Int?)
+
+data class AbilitySummary(val abilityId: Int, val name: LocalizedText, val effect: LocalizedText?)
 
 data class DataVersion(val dataVersion: String, val buildDate: String)

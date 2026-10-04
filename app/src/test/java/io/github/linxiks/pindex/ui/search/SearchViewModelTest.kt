@@ -46,7 +46,7 @@ class SearchViewModelTest {
         advanceTimeBy(2)
         runCurrent()
         val content = vm.uiState.value as SearchUiState.Content
-        assertEquals(listOf(25), content.items.map { it.speciesId })
+        assertEquals(listOf(25), content.results.pokemon.map { it.speciesId })
     }
 
     @Test
@@ -62,7 +62,7 @@ class SearchViewModelTest {
         val vm = viewModel()
         vm.onQueryChange("#025")
         advanceUntilIdle()
-        assertEquals(listOf(25), (vm.uiState.value as SearchUiState.Content).items.map { it.speciesId })
+        assertEquals(listOf(25), (vm.uiState.value as SearchUiState.Content).results.pokemon.map { it.speciesId })
 
         vm.onQueryChange("")
         advanceUntilIdle()

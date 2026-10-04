@@ -48,7 +48,7 @@ object Queries {
         "SELECT egg_group_id FROM species_egg_group WHERE species_id = :speciesId ORDER BY egg_group_id"
 
     const val SPECIES_FORMS =
-        "SELECT p.id AS pokemonId, p.identifier AS identifier, " +
+        "SELECT p.id AS pokemonId, p.identifier AS identifier, p.is_default AS isDefault, " +
             "(SELECT f.id FROM pokemon_form f WHERE f.pokemon_id = p.id " +
             "ORDER BY f.is_default DESC, f.sort_order LIMIT 1) AS formId " +
             "FROM pokemon p WHERE p.species_id = :speciesId ORDER BY p.is_default DESC, p.id"
@@ -75,15 +75,15 @@ object Queries {
         "SELECT DISTINCT entity_id AS entityId, display FROM search_index " +
             "WHERE entity = 'species' AND entity_id = :id"
 
-    // Range scan on the primary key; LIKE would scan the whole table.
-    const val SEARCH_SPECIES_PREFIX =
-        "SELECT entity_id AS entityId, display, priority FROM search_index " +
-            "WHERE term >= :lo AND term < :hi AND entity = 'species'"
+    // Range scan on the primary key; LIKE would scan the whole table. Items have no detail page and are not searched.
+    const val SEARCH_PREFIX =
+        "SELECT entity, entity_id AS entityId, display, priority FROM search_index " +
+            "WHERE term >= :lo AND term < :hi AND entity IN ('species', 'move', 'ability')"
 
     // instr instead of LIKE: user-typed % and _ stay literal.
-    const val SEARCH_SPECIES_CONTAINS =
-        "SELECT entity_id AS entityId, display, priority FROM search_index " +
-            "WHERE entity = 'species' AND instr(term, :q) > 0"
+    const val SEARCH_CONTAINS =
+        "SELECT entity, entity_id AS entityId, display, priority FROM search_index " +
+            "WHERE entity IN ('species', 'move', 'ability') AND instr(term, :q) > 0"
 
     const val POKEMON_ABILITIES =
         "SELECT slot, ability_id AS abilityId, is_hidden AS isHidden FROM pokemon_ability " +
@@ -102,6 +102,9 @@ object Queries {
 
     const val MOVE_DETAIL =
         "SELECT id, type_id AS typeId, damage_class_id AS damageClassId, power, accuracy, pp FROM move WHERE id = :moveId"
+
+    const val MOVES_OF_IDS =
+        "SELECT id, type_id AS typeId, damage_class_id AS damageClassId, power, accuracy, pp FROM move WHERE id IN (:ids)"
 
     const val MOVE_FLAVOR =
         "SELECT f.move_id AS entityId, f.lang AS lang, f.text AS text, vg.sort_order AS sortOrder " +

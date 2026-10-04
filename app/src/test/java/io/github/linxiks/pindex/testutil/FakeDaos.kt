@@ -66,6 +66,7 @@ class FakePokemonDao : PokemonDao {
     override suspend fun abilityFlavor(ids: List<Int>) = emptyList<FlavorRow>()
     override suspend fun abilitySpecies(abilityId: Int) = emptyList<Int>()
     override suspend fun move(moveId: Int): MoveRow? = null
+    override suspend fun moves(ids: List<Int>) = emptyList<MoveRow>()
     override suspend fun moveFlavor(moveId: Int) = emptyList<FlavorRow>()
     override suspend fun moveSpecies(moveId: Int) = emptyList<Int>()
     override suspend fun pokemonMoves(pokemonId: Int) = emptyList<LearnRow>()
@@ -79,9 +80,9 @@ class FakeSearchDao : SearchDao {
     override suspend fun speciesById(id: Int) =
         if (id == 25) listOf(SearchIdRow(25, "皮卡丘")) else emptyList()
 
-    override suspend fun speciesPrefix(lo: String, hi: String) =
-        if (term >= lo && term < hi) listOf(SearchRow(25, "皮卡丘", 0)) else emptyList()
+    override suspend fun prefix(lo: String, hi: String) =
+        if (term >= lo && term < hi) listOf(SearchRow("species", 25, "皮卡丘", 0)) else emptyList()
 
-    override suspend fun speciesContains(q: String) =
-        if (term.contains(q)) listOf(SearchRow(25, "皮卡丘", 0)) else emptyList()
+    override suspend fun contains(q: String) =
+        if (term.contains(q)) listOf(SearchRow("species", 25, "皮卡丘", 0)) else emptyList()
 }

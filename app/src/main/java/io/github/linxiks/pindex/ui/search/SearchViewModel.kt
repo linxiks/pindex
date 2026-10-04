@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.linxiks.pindex.PindexApp
+import io.github.linxiks.pindex.data.model.AbilitySummary
+import io.github.linxiks.pindex.data.model.MoveSummary
 import io.github.linxiks.pindex.data.model.PokemonListItem
 import io.github.linxiks.pindex.data.repository.PokemonRepository
 import io.github.linxiks.pindex.data.repository.SearchRepository
@@ -23,9 +25,27 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 
+data class SearchResults(
+    val pokemon: List<PokemonListItem>,
+    val moves: List<MoveSummary>,
+    val abilities: List<AbilitySummary>,
+) {
+    val isEmpty: Boolean get() = pokemon.isEmpty() && moves.isEmpty() && abilities.isEmpty()
+}
+
+enum class SearchCategory { All, Pokemon, Move, Ability }
+
+/** All, then every category that has results. */
+fun SearchResults.categories(): List<SearchCategory> = listOfNotNull(
+    SearchCategory.All,
+    SearchCategory.Pokemon.takeIf { pokemon.isNotEmpty() },
+    SearchCategory.Move.takeIf { moves.isNotEmpty() },
+    SearchCategory.Ability.takeIf { abilities.isNotEmpty() },
+)
+
 sealed interface SearchUiState {
     data object Idle : SearchUiState
-    data class Content(val items: List<PokemonListItem>) : SearchUiState
+    data class Content(val results: SearchResults) : SearchUiState
     data object Empty : SearchUiState
     data object Error : SearchUiState
 }
@@ -44,18 +64,30 @@ class SearchViewModel(
         .mapLatest { search(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SearchUiState.Idle)
 
+    // Kept across queries; a category without results falls back to All only when displayed.
+    private val _category = MutableStateFlow(SearchCategory.All)
+    val category: StateFlow<SearchCategory> = _category.asStateFlow()
+
     fun onQueryChange(text: String) {
         _query.value = text
+    }
+
+    fun selectCategory(c: SearchCategory) {
+        _category.value = c
     }
 
     private suspend fun search(text: String): SearchUiState {
         val query = normalizeQuery(text)
         if (query == SearchQuery.Blank) return SearchUiState.Idle
         return try {
-            val ids = searchRepo.searchSpecies(query)
+            val hits = searchRepo.search(query)
             val bySpecies = pokemonRepo.list().associateBy { it.speciesId }
-            val items = ids.mapNotNull { bySpecies[it] }
-            if (items.isEmpty()) SearchUiState.Empty else SearchUiState.Content(items)
+            val results = SearchResults(
+                pokemon = hits.species.mapNotNull { bySpecies[it] },
+                moves = pokemonRepo.moveSummaries(hits.moves),
+                abilities = pokemonRepo.abilitySummaries(hits.abilities),
+            )
+            if (results.isEmpty) SearchUiState.Empty else SearchUiState.Content(results)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

@@ -71,6 +71,9 @@ interface PokemonDao {
     @Query(Queries.MOVE_DETAIL)
     suspend fun move(moveId: Int): MoveRow?
 
+    @Query(Queries.MOVES_OF_IDS)
+    suspend fun moves(ids: List<Int>): List<MoveRow>
+
     @Query(Queries.MOVE_FLAVOR)
     suspend fun moveFlavor(moveId: Int): List<FlavorRow>
 
@@ -89,9 +92,9 @@ interface SearchDao {
     @Query(Queries.SEARCH_SPECIES_BY_ID)
     suspend fun speciesById(id: Int): List<SearchIdRow>
 
-    @Query(Queries.SEARCH_SPECIES_PREFIX)
-    suspend fun speciesPrefix(lo: String, hi: String): List<SearchRow>
+    @Query(Queries.SEARCH_PREFIX)
+    suspend fun prefix(lo: String, hi: String): List<SearchRow>
 
-    @Query(Queries.SEARCH_SPECIES_CONTAINS)
-    suspend fun speciesContains(q: String): List<SearchRow>
+    @Query(Queries.SEARCH_CONTAINS)
+    suspend fun contains(q: String): List<SearchRow>
 }

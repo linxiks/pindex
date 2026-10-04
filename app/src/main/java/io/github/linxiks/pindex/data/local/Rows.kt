@@ -28,11 +28,11 @@ data class PokemonDetailRow(
 
 data class StatRow(val statId: Int, val baseValue: Int)
 
-data class FormRow(val pokemonId: Int, val identifier: String, val formId: Int?)
+data class FormRow(val pokemonId: Int, val identifier: String, val formId: Int?, val isDefault: Boolean)
 
 data class SearchIdRow(val entityId: Int, val display: String)
 
-data class SearchRow(val entityId: Int, val display: String, val priority: Int)
+data class SearchRow(val entity: String, val entityId: Int, val display: String, val priority: Int)
 
 data class TypeEfficacyRow(val attackTypeId: Int, val defendTypeId: Int, val factor: Int)
 

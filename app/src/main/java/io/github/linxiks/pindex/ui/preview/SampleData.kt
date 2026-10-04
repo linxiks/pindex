@@ -52,7 +52,6 @@ object SampleData {
         name = zh("皮卡丘"),
         enName = "Pikachu",
         jaName = "ピカチュウ",
-        formName = null,
         genus = zh("鼠宝可梦"),
         types = listOf(electric),
         height = 4,
@@ -105,9 +104,10 @@ object SampleData {
                 LearnedMove(85, 25, MoveMethodGroup.LevelUp, 36, zh("十万伏特"), electric, zh("特殊"), 90),
             ),
         ),
-        otherForms = listOf(
-            FormLink(10080, LocalizedText("Pikachu Rock Star", "en"), "pikachu-rock-star"),
-            FormLink(10094, LocalizedText("Original Cap", "en"), "pikachu-original-cap"),
+        forms = listOf(
+            FormLink(25, null, "pikachu", true),
+            FormLink(10080, LocalizedText("Pikachu Rock Star", "en"), "pikachu-rock-star", false),
+            FormLink(10094, LocalizedText("Original Cap", "en"), "pikachu-original-cap", false),
         ),
     )
 

@@ -3,8 +3,6 @@ package io.github.linxiks.pindex.ui.pokemon
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -80,6 +77,7 @@ fun PokemonDetailScreen(
         onOpenMove = onOpenMove,
         onSelectVersionGroup = viewModel::selectVersionGroup,
         onSelectMoveGroup = viewModel::selectMoveGroup,
+        onSelectForm = viewModel::selectForm,
     )
 }
 
@@ -94,6 +92,7 @@ fun PokemonDetailContent(
     onOpenMove: (Int) -> Unit,
     onSelectVersionGroup: (Int) -> Unit,
     onSelectMoveGroup: (MoveMethodGroup) -> Unit,
+    onSelectForm: (Int) -> Unit,
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -134,13 +133,13 @@ fun PokemonDetailContent(
                 onOpenMove = onOpenMove,
                 onSelectVersionGroup = onSelectVersionGroup,
                 onSelectMoveGroup = onSelectMoveGroup,
+                onSelectForm = onSelectForm,
                 modifier = modifier,
             )
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DetailBody(
     detail: PokemonDetail,
@@ -150,6 +149,7 @@ private fun DetailBody(
     onOpenMove: (Int) -> Unit,
     onSelectVersionGroup: (Int) -> Unit,
     onSelectMoveGroup: (MoveMethodGroup) -> Unit,
+    onSelectForm: (Int) -> Unit,
     modifier: Modifier,
 ) {
     val basicInfo = basicInfoItems(detail)
@@ -158,7 +158,7 @@ private fun DetailBody(
         modifier = modifier,
         contentPadding = PaddingValues(start = Spacing.l, end = Spacing.l, bottom = Spacing.xl),
     ) {
-        item(key = "header") { DetailHeader(detail) }
+        item(key = "header") { DetailHeader(detail, onSelectForm) }
         item(key = "basic") {
             Column {
                 SectionHeader(stringResource(R.string.section_basic_info))
@@ -204,30 +204,12 @@ private fun DetailBody(
                 EvolutionSection(detail.evolution, detail.speciesId, onOpenPokemon)
             }
         }
-        if (detail.otherForms.isNotEmpty()) {
-            item(key = "forms") {
-                Column {
-                    SectionHeader(stringResource(R.string.section_other_forms))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                        detail.otherForms.forEach { form ->
-                            SuggestionChip(
-                                onClick = { onOpenPokemon(form.pokemonId) },
-                                label = {
-                                    Text(form.name?.let { localizedAnnotated(it) } ?: AnnotatedString(form.identifier))
-                                },
-                                shape = MaterialTheme.shapes.small,
-                            )
-                        }
-                    }
-                }
-            }
-        }
         movesSection(detail.learnset, moveView, onSelectVersionGroup, onSelectMoveGroup, onOpenMove)
     }
 }
 
 @Composable
-private fun DetailHeader(detail: PokemonDetail) {
+private fun DetailHeader(detail: PokemonDetail, onSelectForm: (Int) -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -256,16 +238,13 @@ private fun DetailHeader(detail: PokemonDetail) {
                 textAlign = TextAlign.Center,
             )
         }
-        detail.formName?.let {
-            LocalizedLabel(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-            )
-        }
         Spacer(Modifier.height(Spacing.s))
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             detail.types.forEach { TypeChip(name = it.name.text, identifier = it.identifier) }
+        }
+        if (detail.forms.size > 1) {
+            Spacer(Modifier.height(Spacing.m))
+            FormSelector(detail.forms, detail.pokemonId, onSelectForm)
         }
         Spacer(Modifier.height(Spacing.l))
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -337,6 +316,7 @@ private fun PokemonDetailContentPreview() {
                 onOpenMove = {},
                 onSelectVersionGroup = {},
                 onSelectMoveGroup = {},
+                onSelectForm = {},
             )
         }
     }

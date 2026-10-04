@@ -24,10 +24,15 @@
     <string name="pokedex_title">宝可梦图鉴</string>
 
     <!-- Search -->
-    <string name="search_idle_title">搜索宝可梦</string>
+    <string name="search_idle_title">搜索宝可梦、招式和特性</string>
     <string name="search_idle_message">输入中文名、英文名、日文名或全国图鉴编号</string>
     <string name="search_empty_title">没有找到相关结果</string>
     <string name="search_empty_message">试试其他名称或全国图鉴编号</string>
+    <string name="search_category_all">全部</string>
+    <string name="search_category_pokemon">宝可梦</string>
+    <string name="search_category_move">招式</string>
+    <string name="search_category_ability">特性</string>
+    <string name="search_show_all">查看全部 %1$d 个</string>
 
     <!-- Favorites -->
     <string name="favorites_empty_title">还没有收藏宝可梦</string>
@@ -45,7 +50,8 @@
     <string name="detail_not_found_message">请返回图鉴重新选择</string>
     <string name="section_basic_info">基本信息</string>
     <string name="section_stats">种族值</string>
-    <string name="section_other_forms">其他形态</string>
+    <string name="form_label">形态</string>
+    <string name="form_default">普通</string>
     <string name="section_type_defense">属性克制</string>
     <string name="type_defense_caption">受到的伤害</string>
     <string name="section_evolution">进化</string>

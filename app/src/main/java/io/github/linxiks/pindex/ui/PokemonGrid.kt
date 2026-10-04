@@ -38,6 +38,7 @@ private const val SKELETON_COUNT = 6
  * Two-column pokemon card grid shared by the pokedex and search pages.
  * [items] == null shows skeleton cards in the same grid, so [state] survives the Loading → Content switch.
  * [header] items come first; give them full-line spans.
+ * [footer] items come after the cards; give them full-line spans.
  */
 @Composable
 fun PokemonGrid(
@@ -46,6 +47,7 @@ fun PokemonGrid(
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
     header: LazyGridScope.() -> Unit = {},
+    footer: LazyGridScope.() -> Unit = {},
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -68,6 +70,7 @@ fun PokemonGrid(
                 )
             }
         }
+        footer()
     }
 }
 

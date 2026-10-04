@@ -1,6 +1,7 @@
 package io.github.linxiks.pindex.data
 
 import io.github.linxiks.pindex.data.model.EvolutionNode
+import io.github.linxiks.pindex.data.model.FormLink
 import io.github.linxiks.pindex.data.repository.MetaRepository
 import io.github.linxiks.pindex.data.repository.PokemonRepository
 import io.github.linxiks.pindex.domain.LocalizedText
@@ -59,7 +60,6 @@ class PokedexDataTest {
         assertEquals(LocalizedText("皮卡丘", "zh-Hans"), d.name)
         assertEquals("Pikachu", d.enName)
         assertEquals("ピカチュウ", d.jaName)
-        assertNull(d.formName)
         assertEquals(listOf("electric"), d.types.map { it.identifier })
         assertEquals(listOf(35, 55, 40, 50, 50, 90), d.stats.map { it.value })
         assertEquals(320, d.stats.sumOf { it.value })
@@ -73,18 +73,42 @@ class PokedexDataTest {
         assertEquals(4, d.genderRate)
         assertEquals(190, d.captureRate)
         assertEquals(112, d.baseExperience)
-        assertTrue(d.otherForms.isNotEmpty())
-        assertFalse(d.otherForms.any { it.pokemonId == 25 })
+        assertEquals(17, d.forms.size)
+        assertEquals(FormLink(25, null, "pikachu", true), d.forms.first())
     }
 
     @Test
     fun nonDefaultFormLinksBackToDefault() = runTest {
         val pikachu = checkNotNull(pokemon.detail(25))
-        val other = checkNotNull(pokemon.detail(pikachu.otherForms.first().pokemonId))
+        val other = checkNotNull(pokemon.detail(pikachu.forms[1].pokemonId))
         assertFalse(other.isDefault)
         assertEquals(25, other.speciesId)
-        assertTrue(other.formName != null)
-        assertTrue(other.otherForms.any { it.pokemonId == 25 })
+        assertTrue(pikachu.forms[1].name != null)
+        // Opened from any form, the form list is the same.
+        assertEquals(pikachu.forms, other.forms)
+    }
+
+    @Test
+    fun alolanAndMegaFormsDifferFromDefault() = runTest {
+        val raichu = checkNotNull(pokemon.detail(26))
+        val alolan = checkNotNull(pokemon.detail(10100))
+        assertEquals(listOf("electric"), raichu.types.map { it.identifier })
+        assertEquals(listOf("electric", "psychic"), alolan.types.map { it.identifier })
+        assertEquals(listOf(60, 90, 55, 90, 80, 110), raichu.stats.map { it.value })
+        assertEquals(listOf(60, 85, 50, 95, 85, 110), alolan.stats.map { it.value })
+        assertEquals(listOf(9, 31), raichu.abilities.map { it.abilityId })
+        assertEquals(listOf(207), alolan.abilities.map { it.abilityId })
+        assertEquals(listOf(26, 10100, 10304, 10305), raichu.forms.map { it.pokemonId })
+        assertEquals(raichu.forms, alolan.forms)
+        assertEquals(LocalizedText("阿罗拉的样子", "zh-Hans"), raichu.forms[1].name)
+
+        val charizard = checkNotNull(pokemon.detail(6))
+        val megaX = checkNotNull(pokemon.detail(10034))
+        assertEquals(listOf("fire", "flying"), charizard.types.map { it.identifier })
+        assertEquals(listOf("fire", "dragon"), megaX.types.map { it.identifier })
+        assertEquals(listOf(78, 84, 78, 109, 85, 100), charizard.stats.map { it.value })
+        assertEquals(listOf(78, 130, 111, 130, 85, 100), megaX.stats.map { it.value })
+        assertEquals(LocalizedText("超级喷火龙Ｘ", "zh-Hans"), charizard.forms[1].name)
     }
 
     @Test

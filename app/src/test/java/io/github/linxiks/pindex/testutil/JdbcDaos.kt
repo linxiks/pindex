@@ -39,10 +39,19 @@ private fun nameRow(rs: ResultSet) =
     NameRow(rs.getInt("entityId"), rs.getString("lang"), rs.getString("name"), rs.getString("genus"))
 
 private fun searchRow(rs: ResultSet) =
-    SearchRow(rs.getInt("entityId"), rs.getString("display"), rs.getInt("priority"))
+    SearchRow(rs.getString("entity"), rs.getInt("entityId"), rs.getString("display"), rs.getInt("priority"))
 
 private fun flavorRow(rs: ResultSet) =
     FlavorRow(rs.getInt("entityId"), rs.getString("lang"), rs.getString("text"), rs.getInt("sortOrder"))
+
+private fun moveRow(rs: ResultSet) = MoveRow(
+    id = rs.getInt("id"),
+    typeId = rs.getInt("typeId"),
+    damageClassId = rs.getInt("damageClassId"),
+    power = rs.getIntOrNull("power"),
+    accuracy = rs.getIntOrNull("accuracy"),
+    pp = rs.getInt("pp"),
+)
 
 class JdbcPokemonDao : PokemonDao {
     override suspend fun defaultPokemon() = PokedexJdbc.query(Queries.DEFAULT_POKEMON) {
@@ -97,7 +106,7 @@ class JdbcPokemonDao : PokemonDao {
 
     override suspend fun speciesForms(speciesId: Int) =
         PokedexJdbc.query(Queries.SPECIES_FORMS, mapOf("speciesId" to speciesId)) {
-            FormRow(it.getInt("pokemonId"), it.getString("identifier"), it.getIntOrNull("formId"))
+            FormRow(it.getInt("pokemonId"), it.getString("identifier"), it.getIntOrNull("formId"), it.getBool("isDefault"))
         }
 
     override suspend fun growthRateIdentifier(id: Int) =
@@ -141,16 +150,11 @@ class JdbcPokemonDao : PokemonDao {
         PokedexJdbc.query(Queries.ABILITY_SPECIES, mapOf("abilityId" to abilityId)) { it.getInt(1) }
 
     override suspend fun move(moveId: Int) =
-        PokedexJdbc.query(Queries.MOVE_DETAIL, mapOf("moveId" to moveId)) {
-            MoveRow(
-                id = it.getInt("id"),
-                typeId = it.getInt("typeId"),
-                damageClassId = it.getInt("damageClassId"),
-                power = it.getIntOrNull("power"),
-                accuracy = it.getIntOrNull("accuracy"),
-                pp = it.getInt("pp"),
-            )
-        }.singleOrNull()
+        PokedexJdbc.query(Queries.MOVE_DETAIL, mapOf("moveId" to moveId), ::moveRow).singleOrNull()
+
+    override suspend fun moves(ids: List<Int>): List<MoveRow> =
+        if (ids.isEmpty()) emptyList()
+        else PokedexJdbc.query(Queries.MOVES_OF_IDS, mapOf("ids" to ids), ::moveRow)
 
     override suspend fun moveFlavor(moveId: Int) =
         PokedexJdbc.query(Queries.MOVE_FLAVOR, mapOf("moveId" to moveId), ::flavorRow)
@@ -183,9 +187,9 @@ class JdbcSearchDao : SearchDao {
             SearchIdRow(it.getInt("entityId"), it.getString("display"))
         }
 
-    override suspend fun speciesPrefix(lo: String, hi: String) =
-        PokedexJdbc.query(Queries.SEARCH_SPECIES_PREFIX, mapOf("lo" to lo, "hi" to hi), ::searchRow)
+    override suspend fun prefix(lo: String, hi: String) =
+        PokedexJdbc.query(Queries.SEARCH_PREFIX, mapOf("lo" to lo, "hi" to hi), ::searchRow)
 
-    override suspend fun speciesContains(q: String) =
-        PokedexJdbc.query(Queries.SEARCH_SPECIES_CONTAINS, mapOf("q" to q), ::searchRow)
+    override suspend fun contains(q: String) =
+        PokedexJdbc.query(Queries.SEARCH_CONTAINS, mapOf("q" to q), ::searchRow)
 }

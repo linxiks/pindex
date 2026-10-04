@@ -106,7 +106,12 @@ fun PindexNavHost() {
                 )
             }
             composable(TopLevel.Search.route) {
-                SearchScreen(onBack = { navController.navigateUp() }, onOpenPokemon = openPokemon)
+                SearchScreen(
+                    onBack = { navController.navigateUp() },
+                    onOpenPokemon = openPokemon,
+                    onOpenMove = openMove,
+                    onOpenAbility = openAbility,
+                )
             }
             composable(TopLevel.Favorites.route) { FavoritesScreen() }
             composable(TopLevel.Settings.route) { SettingsScreen() }

@@ -13,13 +13,12 @@ import io.github.linxiks.pindex.data.model.PokemonDetail
 import io.github.linxiks.pindex.data.repository.PokemonRepository
 import io.github.linxiks.pindex.domain.MoveMethodGroup
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 sealed interface DetailUiState {
     data object Loading : DetailUiState
@@ -35,10 +34,14 @@ class PokemonDetailViewModel(
     private val repo: PokemonRepository,
     private val savedState: SavedStateHandle,
 ) : ViewModel() {
-    private val pokemonId: Int = checkNotNull(savedState.get<Int>(ARG_POKEMON_ID))
+    // Selected form lives in SavedStateHandle: switching replaces this page instead of pushing a new one.
+    private val selectedPokemonId: StateFlow<Int> =
+        savedState.getStateFlow(KEY_SELECTED_POKEMON_ID, checkNotNull(savedState.get<Int>(ARG_POKEMON_ID)))
 
-    private val _uiState = MutableStateFlow<DetailUiState>(DetailUiState.Loading)
-    val uiState: StateFlow<DetailUiState> = _uiState.asStateFlow()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<DetailUiState> = selectedPokemonId
+        .mapLatest { load(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, DetailUiState.Loading)
 
     // Kept in SavedStateHandle so the choice survives returning to this page.
     val moveSelection: StateFlow<MoveSelection> = combine(
@@ -47,17 +50,17 @@ class PokemonDetailViewModel(
     ) { vg, g -> MoveSelection(vg, MoveMethodGroup.valueOf(g)) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, MoveSelection())
 
-    init {
-        viewModelScope.launch {
-            _uiState.value = try {
-                repo.detail(pokemonId)?.let { DetailUiState.Content(it) } ?: DetailUiState.NotFound
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.e("pindex", "detail load failed for $pokemonId", e)
-                DetailUiState.Error
-            }
-        }
+    fun selectForm(pokemonId: Int) {
+        savedState[KEY_SELECTED_POKEMON_ID] = pokemonId
+    }
+
+    private suspend fun load(pokemonId: Int): DetailUiState = try {
+        repo.detail(pokemonId)?.let { DetailUiState.Content(it) } ?: DetailUiState.NotFound
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Log.e("pindex", "detail load failed for $pokemonId", e)
+        DetailUiState.Error
     }
 
     fun selectVersionGroup(id: Int) {
@@ -72,6 +75,7 @@ class PokemonDetailViewModel(
         const val ARG_POKEMON_ID = "pokemonId"
         private const val KEY_MOVE_VERSION_GROUP = "moveVersionGroup"
         private const val KEY_MOVE_GROUP = "moveGroup"
+        private const val KEY_SELECTED_POKEMON_ID = "selectedPokemonId"
 
         val Factory = viewModelFactory {
             initializer {
