@@ -2,3 +2,9 @@ data/raw/
 data/normalized/
 data/generated/
 __pycache__/
+.gradle/
+build/
+/local.properties
+.kotlin/
+.idea/
+*.iml

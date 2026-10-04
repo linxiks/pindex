@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">pindex</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_pokedex">图鉴</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_favorites">收藏</string>
+    <string name="nav_settings">设置</string>
+
+    <!-- Shared -->
+    <string name="action_back">返回</string>
+    <string name="action_clear">清除</string>
+    <string name="search_placeholder">搜索宝可梦、编号、招式…</string>
+    <string name="generation_all">全部</string>
+    <string name="load_error_title">资料加载失败</string>
+    <string name="load_error_message">请重新安装应用后再试</string>
+    <string name="fallback_zh_hant">（繁体中文）</string>
+    <string name="fallback_en">（英文原文）</string>
+    <string name="value_missing">—</string>
+    <string name="image_description">%1$s 的图片</string>
+
+    <!-- Pokedex -->
+    <string name="pokedex_title">宝可梦图鉴</string>
+
+    <!-- Search -->
+    <string name="search_idle_title">搜索宝可梦</string>
+    <string name="search_idle_message">输入中文名、英文名、日文名或全国图鉴编号</string>
+    <string name="search_empty_title">没有找到相关结果</string>
+    <string name="search_empty_message">试试其他名称或全国图鉴编号</string>
+
+    <!-- Favorites -->
+    <string name="favorites_empty_title">还没有收藏宝可梦</string>
+    <string name="favorites_empty_message">收藏功能将在后续版本提供</string>
+
+    <!-- Settings -->
+    <string name="settings_title">设置</string>
+    <string name="settings_data_version">数据版本</string>
+    <string name="settings_data_version_value">%1$s（%2$s）</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_about_text">非官方项目。Pokémon and Pokémon character names are trademarks of Nintendo, Creatures Inc. and GAME FREAK inc.</string>
+
+    <!-- Detail -->
+    <string name="detail_not_found_title">没有找到这只宝可梦</string>
+    <string name="detail_not_found_message">请返回图鉴重新选择</string>
+    <string name="section_basic_info">基本信息</string>
+    <string name="section_stats">种族值</string>
+    <string name="section_other_forms">其他形态</string>
+    <string name="info_genus">分类</string>
+    <string name="info_ja_name">日文名</string>
+    <string name="info_height">身高</string>
+    <string name="info_weight">体重</string>
+    <string name="info_gender">性别</string>
+    <string name="info_capture_rate">捕获率</string>
+    <string name="info_egg_groups">蛋组</string>
+    <string name="info_growth_rate">成长速度</string>
+    <string name="info_base_happiness">基础亲密度</string>
+    <string name="info_hatch_counter">孵化周期</string>
+    <string name="info_hatch_counter_value">%1$d 周期</string>
+    <string name="info_base_experience">基础经验值</string>
+    <string name="info_generation">世代</string>
+    <string name="stat_total">总和</string>
+
+    <!-- Growth rates by identifier -->
+    <string name="growth_slow">慢</string>
+    <string name="growth_medium">较快</string>
+    <string name="growth_fast">快</string>
+    <string name="growth_medium_slow">较慢</string>
+    <string name="growth_slow_then_very_fast">最快</string>
+    <string name="growth_fast_then_very_slow">最慢</string>
+</resources>
